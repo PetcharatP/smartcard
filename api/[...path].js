@@ -3,8 +3,10 @@ export default async function handler(req, res) {
   const { path } = req.query;
   const apiPath = Array.isArray(path) ? path.join('/') : path || '';
   
-  // Backend API URL
-  const backendUrl = `http://103.91.205.153:3000/api/${apiPath}`;
+  // Backend API URL - path already includes /api/ prefix from frontend
+  const backendUrl = `http://103.91.205.153:3000/${apiPath}`;
+  
+  console.log('🔗 Proxying request to:', backendUrl);
   
   try {
     // Forward the request to your backend
@@ -15,12 +17,17 @@ export default async function handler(req, res) {
         // Forward other necessary headers
         ...(req.headers.authorization && { 'Authorization': req.headers.authorization }),
       },
-      ...(req.method !== 'GET' && req.method !== 'HEAD' && { 
+      ...(req.method !== 'GET' && req.method !== 'HEAD' && req.body && { 
         body: JSON.stringify(req.body) 
       }),
     });
 
-    const data = await response.json();
+    let data;
+    try {
+      data = await response.json();
+    } catch (e) {
+      data = await response.text();
+    }
     
     // Set CORS headers
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -32,6 +39,7 @@ export default async function handler(req, res) {
       return;
     }
     
+    // Forward the response
     res.status(response.status).json(data);
   } catch (error) {
     console.error('Proxy error:', error);
