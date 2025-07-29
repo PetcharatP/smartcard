@@ -1,0 +1,156 @@
+.behavior-point-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: #e0e5ec;
+  padding: 60px 0;
+  padding-top: 50px;
+  width: 100vw;
+  max-width: 100%;
+}
+
+.behavior-card {
+  background: #e0e5ec;
+  border-radius: 20px;
+  box-shadow: 10px 10px 30px #c2c8d0, -10px -10px 30px #ffffff;
+  padding: 2.5rem 2rem;
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+}
+
+.profile-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.profile-img {
+  width: 90px;
+  height: 90px;
+  margin-bottom: 1rem;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 8px #c8ccd1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.1rem;
+  color: #888;
+}
+
+.profile-info p {
+  margin: 0.5rem 0;
+  font-size: 1rem;
+  color: #222;
+}
+
+.point {
+  color: #1976d2;
+  font-weight: bold;
+  font-size: 1.25rem;
+  margin-top: 0.5rem;
+}
+
+.deduct-point-btn {
+  margin: 16px 0;
+  padding: 12px 28px;
+  font-size: 1.05rem;
+  cursor: pointer;
+  background: #e0e5ec;
+  color: #1976d2;
+  border: none;
+  border-radius: 10px;
+  box-shadow: 6px 6px 10px #c2c8d0, -6px -6px 10px #ffffff;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+.deduct-point-btn:hover {
+  background: #d6dce4;
+  color: #125ea7;
+}
+
+.adjustment-list {
+  list-style: none;
+  padding: 0;
+  margin: 1.2rem 0 0 0;
+  background: #f7fafd;
+  border-radius: 12px;
+  box-shadow: 2px 2px 8px #c2c8d0;
+}
+
+.adjustment-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid #e0e5ec;
+  font-size: 0.97rem;
+}
+
+.adjustment-list li:last-child {
+  border-bottom: none;
+}
+
+.adjustment-list .adj-date {
+  flex: 1;
+  text-align: left;
+  color: #888;
+}
+
+.adjustment-list .adj-change {
+  flex: 0.5;
+  text-align: center;
+  font-weight: bold;
+  color: #1976d2;
+}
+
+.adjustment-list .adj-reason {
+  flex: 2;
+  text-align: left;
+  color: #555;
+}
+
+.adjustment-list .adj-operator {
+  flex: 1;
+  text-align: right;
+  color: #888;
+}
+
+.no-history {
+  color: #aaa;
+  text-align: center;
+  font-size: 1rem;
+  margin: 1.5rem 0;
+}
+
+.loading {
+  font-size: 1.5rem;
+  color: #888;
+  margin: 2rem auto;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .behavior-point-container {
+    padding: 0.5rem;
+    padding-top: 10px;
+  }
+  .behavior-card {
+    max-width: 100vw;
+    padding: 1.2rem 0.5rem;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .profile-img {
+    width: 72px;
+    height: 72px;
+  }
+  .adjustment-list li {
+    padding: 0.5rem 0.3rem;
+    font-size: 0.95rem;
+  }
+}
