@@ -6,7 +6,15 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 5173,
-    // ลบ proxy ออกเพื่อให้ frontend เรียก API โดยตรง
+    // Proxy for API calls to avoid CORS and Mixed Content issues
+    proxy: {
+      '/api': {
+        target: 'http://103.91.205.153:3000',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path
+      }
+    }
   },
   build: {
     outDir: 'dist',
