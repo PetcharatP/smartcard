@@ -7,10 +7,10 @@ export default function DeductPoint() {
   const [reason, setReason] = useState('');
   const [operator, setOperator] = useState('');
   const [message, setMessage] = useState('');
-  const apiUrl = import.meta.env.VITE_API_URL;
+  const apiUrl = process.env.NODE_ENV === 'production' ? '' : (import.meta.env.VITE_API_URL || '');
   const handleSubmit = async e => {
     e.preventDefault();
-    const res = await fetch(`${apiUrl}/api/behavior/deduct`, {
+    const res = await fetch(`/api/behavior/deduct`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userid, change, reason, operator })
@@ -20,10 +20,13 @@ export default function DeductPoint() {
   };
 
   return (
-    <div className="deduct-point-container">
-      <div className="deduct-point-card">
-        <h2>ตัดคะแนน</h2>
-        <form onSubmit={handleSubmit}>
+    <div className="deduct-point-bg">
+      <div className="deduct-point-container">
+        <h1 className="deduct-point-title">ระบบตัดคะแนนความประพฤติ</h1>
+        
+        <div className="deduct-point-card">
+          <h2>ตัดคะแนน</h2>
+          <form onSubmit={handleSubmit}>
           <div>
             <label>
               รหัสนักเรียน:
@@ -69,6 +72,7 @@ export default function DeductPoint() {
           <button type="submit">ตัดคะแนน</button>
         </form>
         {message && <div className="message">{message}</div>}
+        </div>
       </div>
     </div>
   );

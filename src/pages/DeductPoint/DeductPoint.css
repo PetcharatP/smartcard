@@ -1,22 +1,40 @@
-.deduct-point-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+/* DeductPoint.css - Home-like design pattern */
+.deduct-point-bg {
   min-height: 100vh;
+  padding: 2rem;
   background: #e0e5ec;
-  padding: 60px 0;
-  padding-top: 10px;
-  width: 100vw;
-  max-width: 100%;
+  padding-top: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.deduct-point-container {
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  background: #e0e5ec;
+  border-radius: 20px;
+  box-shadow: 10px 10px 30px #c2c8d0, -10px -10px 30px #ffffff;
+  padding: 30px 20px;
+  box-sizing: border-box;
+}
+
+.deduct-point-title {
+  font-size: 1.875rem;
+  font-weight: 600;
+  color: #2563eb;
+  margin-bottom: 2rem;
+  text-align: center;
 }
 
 .deduct-point-card {
   background: #e0e5ec;
-  border-radius: 20px;
-  box-shadow: 10px 10px 30px #c2c8d0, -10px -10px 30px #ffffff;
-  padding: 2.5rem 2rem;
-  width: 100%;
-  max-width: 420px;
+  border-radius: 16px;
+  box-shadow: 6px 6px 16px #c2c8d0, -6px -6px 16px #ffffff;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border: none;
   text-align: center;
 }
 
@@ -85,21 +103,133 @@
 }
 
 /* Responsive */
-@media (max-width: 600px) {
-  .deduct-point-container {
-    padding: 0.5rem;
-    padding-top: 80px;
-  }
-  .deduct-point-card {
-    max-width: 100vw;
-    padding: 1.2rem 0.5rem;
-    border-radius: 0;
-    box-shadow: none;
-  }
-  .deduct-point-card input,
-  .deduct-point-card button {
-    font-size: 1em;
+@media (max-width: 768px) {
+  .deduct-point-bg {
     padding: 10px;
+    padding-top: 60px;
+  }
+
+  .deduct-point-container {
+    width: calc(100% - 20px);
+    padding: 16px;
+    border-radius: 15px;
+    margin: 0;
+  }
+
+  .deduct-point-title {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+  }
+
+  .deduct-point-card {
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+  }
+
+  .deduct-point-card h2 {
+    font-size: 1.25rem;
+    margin-bottom: 16px;
+  }
+
+  .deduct-point-card form {
+    gap: 16px;
+  }
+
+  .deduct-point-card label {
+    font-size: 1rem;
+    margin-bottom: 6px;
+  }
+
+  .deduct-point-card input {
+    padding: 12px;
+    font-size: 16px; /* Prevent zoom on iOS */
+    border-radius: 10px;
+    margin-top: 6px;
+  }
+
+  .deduct-point-card button {
+    padding: 14px;
+    font-size: 16px; /* Prevent zoom on iOS */
+    border-radius: 10px;
+    width: 100%;
+  }
+
+  .deduct-point-card .message {
+    margin-top: 12px;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .deduct-point-bg {
+    padding: 8px;
+    padding-top: 60px;
+  }
+
+  .deduct-point-container {
+    width: calc(100% - 16px);
+    padding: 12px;
+    border-radius: 12px;
+  }
+
+  .deduct-point-title {
+    font-size: 1.25rem;
+    margin-bottom: 16px;
+  }
+
+  .deduct-point-card {
+    padding: 12px;
+    border-radius: 10px;
+    margin-bottom: 12px;
+  }
+
+  .deduct-point-card h2 {
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+  }
+
+  .deduct-point-card form {
+    gap: 12px;
+  }
+
+  .deduct-point-card label {
+    font-size: 14px;
+  }
+
+  .deduct-point-card input {
+    padding: 10px;
+    font-size: 16px;
     border-radius: 8px;
+  }
+
+  .deduct-point-card button {
+    padding: 12px;
+    font-size: 16px;
+    border-radius: 8px;
+  }
+
+  .deduct-point-card .message {
+    margin-top: 10px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .deduct-point-bg {
+    padding: 5px;
+  }
+
+  .deduct-point-container {
+    width: calc(100% - 10px);
+    padding: 10px;
+  }
+
+  .deduct-point-title {
+    font-size: 1.1rem;
+  }
+
+  .deduct-point-card h2 {
+    font-size: 1rem;
   }
 }

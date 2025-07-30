@@ -21,10 +21,12 @@ export default function Auth() {
   const [registerPass2, setRegisterPass2] = useState('');
   const [registerError, setRegisterError] = useState('');
   const [registerBlood, setRegisterBlood] = useState('');
-  const apiUrl = import.meta.env.VITE_API_URL;
+  
+  // ใช้ relative path เพื่อให้ Vercel proxy ทำงาน
+  const apiUrl = process.env.NODE_ENV === 'production' ? '' : (import.meta.env.VITE_API_URL || '');
 
-  console.log('🔍 API URL:', apiUrl); // ตรวจสอบ API URL
-  console.log('🔍 Environment:', import.meta.env); // ตรวจสอบ environment variables
+  console.log('🔍 Environment:', process.env.NODE_ENV);
+  console.log('🔍 API URL:', apiUrl);
 
   const navigate = useNavigate();
 
@@ -39,7 +41,7 @@ export default function Auth() {
     setLoading(true);
     setLoginStatus('กำลังเข้าสู่ระบบ...');
     try {
-      const res = await fetch(`${apiUrl}/api/login`, {
+      const res = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: loginUserid, password: loginPassword }),
@@ -50,22 +52,29 @@ export default function Auth() {
       if (res.ok) {
         setLoginStatus('เข้าสู่ระบบสำเร็จ! กำลังนำคุณไปยังหน้าหลัก...');
         
-        // ตรวจสอบและแก้ไขการเก็บ token
-        const token = data.data;
-        console.log('Token to save:', token, 'Type:', typeof token);
+        // เก็บ token และข้อมูล user แบบเร็ว
+        const token = data.token || data.data?.token;
+        const userInfo = data.data?.user;
         
-        if (typeof token === 'string') {
+        console.log('⚡ Fast login - Token:', token ? 'OK' : 'Missing');
+        console.log('⚡ Fast login - User info:', userInfo ? 'OK' : 'Missing');
+        
+        if (token) {
           localStorage.setItem('token', token);
-        } else if (typeof token === 'object' && token.token) {
-          localStorage.setItem('token', token.token);
+          console.log('✅ Token saved');
         } else {
-          console.error('Invalid token format:', token);
-          localStorage.setItem('token', JSON.stringify(token));
+          console.error('❌ No token received');
         }
         
-        setTimeout(() => {
-          navigate('/');
-        }, 1000);
+        if (userInfo) {
+          localStorage.setItem('userInfo', JSON.stringify(userInfo));
+          console.log('✅ User info saved immediately:', userInfo);
+        } else {
+          console.error('❌ No user info received');
+        }
+        
+        // นำทางทันทีโดยไม่ต้องรอ
+        navigate('/');
       } else {
         setLoginError(data.error || data.message || 'เข้าสู่ระบบไม่สำเร็จ');
         setLoginStatus('');
@@ -91,7 +100,7 @@ export default function Auth() {
       return;
     }
     try {
-      const res = await fetch(`${apiUrl}/api/register`, {
+      const res = await fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -99,7 +108,7 @@ export default function Auth() {
           realname: registerName,
           userid: registerCitizenId,
           password: registerPass,
-          blood: registerBlood, // ส่ง blood ไปด้วย
+          blood: registerBlood,
         }),
       });
       const data = await res.json();
@@ -115,14 +124,11 @@ export default function Auth() {
   };
 
   return (
-    <div className="container" style={{
-      opacity: fadeIn ? 1 : 0,
-      transform: fadeIn ? 'translateY(0)' : 'translateY(30px)',
-      transition: 'opacity 0.7s, transform 0.7s'
-    }}>
-      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
-      <img src={logo} alt="logo" style={{ width: 100, height: 100, objectFit: 'contain' }} />
-      </div>
+    <div className="login-bg">
+      <div className={`container ${fadeIn ? 'fade-in' : ''}`}>
+        <div className="logo-container">
+        <img src={logo} alt="logo" className="logo" />
+        </div>
       <div className="tabs">
         <button
           className={tab === 'login' ? 'active' : ''}
@@ -156,8 +162,8 @@ export default function Auth() {
             required
             disabled={loading}
           />
-          {loginError && <div style={{ color: 'red', marginBottom: 8 }}>{loginError}</div>}
-          {loginStatus && <div style={{ color: 'green', marginBottom: 8 }}>{loginStatus}</div>}
+          {loginError && <div className="error-message">{loginError}</div>}
+          {loginStatus && <div className="success-message">{loginStatus}</div>}
           <button
             type="submit"
             disabled={loading}
@@ -209,7 +215,7 @@ export default function Auth() {
               value={registerBlood}
               onChange={e => setRegisterBlood(e.target.value)}
               required
-              style={{ marginBottom: 12 }}
+              className="register-blood-select"
             >
               <option value="">เลือกกรุ๊ปเลือด</option>
               <option value="A">A</option>
@@ -217,15 +223,16 @@ export default function Auth() {
               <option value="O">O</option>
               <option value="AB">AB</option>
           </select>
-          {registerError && <div style={{ color: 'red', marginBottom: 8 }}>{registerError}</div>}
+          {registerError && <div className="error-message">{registerError}</div>}
           <button type="submit" className="btn">สมัครสมาชิก</button>
         </form>
       )}
       {tab === 'login' && (
-        <div style={{ marginTop: 16 }}>
-          ยังไม่มีบัญชี? <span style={{ color: '#007bff', cursor: 'pointer' }} onClick={() => setTab('register')}>สมัครสมาชิก</span>
+        <div className="login-footer">
+          ยังไม่มีบัญชี? <span className="login-link" onClick={() => setTab('register')}>สมัครสมาชิก</span>
         </div>
       )}
+      </div>
     </div>
   );
 }

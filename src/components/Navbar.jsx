@@ -13,7 +13,7 @@ export default function Navbar() {
   const [profileImage, setProfileImage] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
   const [showGunBehaviorMenu, setShowGunBehaviorMenu] = useState(false);
-  const apiUrl = import.meta.env.VITE_API_URL;
+  const apiUrl = process.env.NODE_ENV === 'production' ? '' : (import.meta.env.VITE_API_URL || '');
   const navigate = useNavigate();
   const location = useLocation();
   const profileRef = useRef(null);
@@ -36,7 +36,7 @@ export default function Navbar() {
     if (!token && location.pathname !== '/login' && location.pathname !== '/register') {
       navigate('/login');
     } else if (token) {
-      fetch(`${apiUrl}/api/user/${token}`)
+      fetch(`/api/user/${token}`)
         .then(res => res.json())
         .then(data => {
           if (data.data) {

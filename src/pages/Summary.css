@@ -1,13 +1,49 @@
-/* ส่วน container */
+/* Summary page with Home-like design pattern */
+.summary-bg {
+  min-height: 100vh;
+  padding: 2rem;
+  background: #e0e5ec;
+  padding-top: 50px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 .summary-container {
-  max-width: 900px;
-  margin: 48px auto;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
   background: #e0e5ec;
   border-radius: 20px;
   box-shadow: 10px 10px 30px #c2c8d0, -10px -10px 30px #ffffff;
-  padding: 40px 32px 32px 32px;
-  padding-top: 30px;
+  padding: 30px 20px;
   box-sizing: border-box;
+}
+
+.summary-title {
+  font-size: 1.875rem;
+  font-weight: 600;
+  color: #2563eb;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.summary-card {
+  background: #e0e5ec;
+  border-radius: 16px;
+  box-shadow: 6px 6px 16px #c2c8d0, -6px -6px 16px #ffffff;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border: none;
+}
+
+.summary-form-card {
+  background: #e0e5ec;
+  border-radius: 16px;
+  box-shadow: 6px 6px 16px #c2c8d0, -6px -6px 16px #ffffff;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border: none;
 }
 
 /* ตาราง */
@@ -17,9 +53,9 @@
   border-collapse: collapse;
   margin-bottom: 16px;
   background: #e0e5ec;
-  border-radius: 12px;
+  border-radius: 16px;
   overflow: hidden;
-  box-shadow: 6px 6px 16px #c2c8d0, -6px -6px 16px #f0f5fa;
+  box-shadow: inset 2px 2px 6px #c8ccd1, inset -2px -2px 6px #f0f5fa;
   animation: fadeIn 0.5s;
 }
 
@@ -54,27 +90,27 @@
   background: #2563eb;
   color: #fff;
   border: none;
-  border-radius: 8px;
-  padding: 5px 10px;
+  border-radius: 10px;
+  padding: 8px 12px;
   cursor: pointer;
   font-size: 0.97rem;
-  font-weight: 500;
-  box-shadow: 2px 2px 8px #c2c8d0;
-  transition: background 0.2s, transform 0.15s;
+  font-weight: bold;
+  box-shadow: 0 2px 8px #c8ccd1;
+  transition: 0.3s;
   margin: 2px 0;
   min-width: 56px;
 }
 
 .summary-table button:hover {
-  background: #125ea7;
+  background: #1e40af;
   transform: scale(1.04);
 }
 .summary-table td button[type="button"] {
   margin-left: 0;
   margin-right: 6px;
-  padding: 5px 10px;
+  padding: 8px 12px;
   font-size: 0.97rem;
-  border-radius: 8px;
+  border-radius: 10px;
   min-width: 56px;
 }
 
@@ -141,6 +177,15 @@
   outline: none;
 }
 /* ฟอร์ม */
+.summary-form {
+  background: #e0e5ec;
+  border-radius: 16px;
+  box-shadow: 6px 6px 16px #c2c8d0, -6px -6px 16px #f0f5fa;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border: none;
+}
+
 .summary-form input,
 .summary-form select,
 .summary-form button {
@@ -168,15 +213,14 @@
   margin-right: 8px;
   padding: 12px 28px;
   border-radius: 10px;
-  box-shadow: 2px 2px 8px #c2c8d0;
+  box-shadow: 6px 6px 10px #c2c8d0, -6px -6px 10px #ffffff;
   cursor: pointer;
   font-weight: bold;
-  transition: background 0.2s, transform 0.15s;
+  transition: 0.3s;
 }
 
 .summary-form button[type="submit"]:hover {
-  background: #125ea7;
-  transform: scale(1.04);
+  background: #1e40af;
 }
 
 .summary-form button[type="button"] {
@@ -186,14 +230,14 @@
   margin-left: 8px;
   padding: 12px 20px;
   border-radius: 10px;
-  box-shadow: 2px 2px 8px #c2c8d0;
+  box-shadow: 6px 6px 10px #c2c8d0, -6px -6px 10px #ffffff;
   cursor: pointer;
   font-weight: bold;
-  transition: background 0.2s;
+  transition: 0.3s;
 }
 
 .summary-form button[type="button"]:hover {
-  background: #e3f2fd;
+  background: #d6dce4;
 }
 
 .summary-form .other-field {
@@ -234,87 +278,287 @@
   background: #2563eb;
   color: #fff;
   border: none;
-  border-radius: 8px;
-  padding: 6px 16px;
+  border-radius: 10px;
+  padding: 12px 16px;
   margin-bottom: 8px;
   cursor: pointer;
   font-size: 1rem;
-  font-weight: 500;
-  box-shadow: 2px 2px 8px #c2c8d0;
-  transition: background 0.2s;
+  font-weight: bold;
+  box-shadow: 6px 6px 10px #c2c8d0, -6px -6px 10px #ffffff;
+  transition: 0.3s;
 }
+
 .summary-accordion-btn:hover {
-  background: #125ea7;
+  background: #1e40af;
 }
 
 .summary-company-btn {
-  background: #90caf9;
+  background: #e0e5ec;
   color: #222;
   border: none;
-  border-radius: 8px;
-  padding: 4px 14px;
+  border-radius: 10px;
+  padding: 12px 14px;
   margin-bottom: 4px;
   cursor: pointer;
   font-size: 1rem;
+  font-weight: bold;
+  box-shadow: 6px 6px 10px #c2c8d0, -6px -6px 10px #ffffff;
+  transition: 0.3s;
+}
+
+.summary-company-btn:hover {
+  background: #d6dce4;
+}
+
+/* Status classes */
+.status-sent {
+  color: #19d254;
   font-weight: 500;
+}
+
+.status-not-sent {
+  color: #e53935;
+  font-weight: 500;
+}
+
+.status-user {
+  color: #2563eb;
+  font-weight: bold;
+}
+
+.summary-section-title {
+  color: #007bff;
+  margin-bottom: 8px;
+}
+
+/* Table cell styles */
+.summary-sale-cell {
+  font-size: 0.92em;
+  word-break: break-word;
+  white-space: normal;
+}
+
+.summary-view-btn {
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 2px 12px;
+  font-size: 0.95em;
+  cursor: pointer;
+  margin-bottom: 4px;
   transition: background 0.2s;
 }
-.summary-company-btn:hover {
-  background: #e3f2fd;
+
+.summary-view-btn:hover {
+  background: #1565c0;
+}
+
+.summary-no-data {
+  color: #888;
+}
+
+.summary-remain-negative {
+  color: red;
+  font-weight: 600;
+}
+
+.summary-remain-positive {
+  color: green;
+  font-weight: 600;
+}
+
+.summary-edit-btn {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 12px;
+  font-size: 0.9em;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.summary-edit-btn:hover {
+  background: #1d4ed8;
+}
+
+.summary-delete-btn {
+  background: none;
+  border: none;
+  color: red;
+  cursor: pointer;
+  margin-left: 8px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.summary-delete-btn:hover {
+  background: #ffeaea;
 }
 
 /* Responsive สำหรับมือถือ */
-@media (max-width: 600px) {
+@media (max-width: 768px) {
+  .summary-bg {
+    padding: 0.5rem;
+    padding-top: 60px;
+    background: #e0e5ec;
+  }
+
   .summary-container {
     max-width: 100vw;
-    padding: 8px 0.5vw 8px 0.5vw;
-    border-radius: 0;
-    box-shadow: none;
-    padding-top: 5px;
+    padding: 16px 12px;
+    border-radius: 12px;
+    box-shadow: 6px 6px 16px #c2c8d0, -6px -6px 16px #ffffff;
+    margin: 0;
+    width: calc(100% - 1rem);
+  }
+
+  .summary-title {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .summary-card,
+  .summary-form-card,
+  .summary-form {
+    padding: 1rem;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    box-shadow: 4px 4px 12px #c2c8d0, -4px -4px 12px #ffffff;
+  }
+
+  /* Table wrapper for horizontal scroll */
+  .table-wrapper {
+    overflow-x: auto;
+    border-radius: 8px;
+    box-shadow: 4px 4px 12px #c2c8d0, -4px -4px 12px #ffffff;
+    margin-bottom: 1rem;
   }
 
   .summary-table {
-    font-size: 0.93rem;
-    border-radius: 0;
-    box-shadow: none;
-    overflow-x: auto;
-    display: block;
-    background: #e0e5ec;
-    min-width: 600px;
+    min-width: 700px;
+    border-radius: 12px;
+    font-size: 14px;
   }
 
   .summary-table th,
   .summary-table td {
-    padding: 7px 2px;
-    font-size: 0.93rem;
-    word-break: break-word;
-    white-space: nowrap;
+    padding: 8px 12px;
+    font-size: 14px;
+    min-width: 100px;
+  }
+
+  .summary-table button {
+    padding: 6px 12px;
+    font-size: 14px;
+    min-width: 60px;
+  }
+
+  /* Form responsive */
+  .summary-form input,
+  .summary-form select,
+  .summary-form button {
+    font-size: 16px; /* Prevent zoom on iOS */
+    padding: 12px;
+    width: 100%;
+    box-sizing: border-box;
+    border-radius: 10px;
+    margin-bottom: 12px;
+  }
+
+  .summary-form button[type="submit"],
+  .summary-form button[type="button"] {
+    padding: 12px 20px;
+    margin: 8px 0;
+  }
+
+  .summary-year-row {
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .summary-year-col {
+    width: 100%;
+  }
+
+  .summary-year-col input {
+    padding: 12px;
+    font-size: 16px;
+    border-radius: 10px;
+  }
+
+  .summary-accordion-btn {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 16px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+  }
+
+  .summary-company-btn {
+    width: 100%;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    border-radius: 10px;
+  }
+}
+
+@media (max-width: 600px) {
+  .summary-bg {
+    padding: 0.75rem;
+    padding-top: 65px;
+  }
+
+  .summary-container {
+    width: calc(100% - 1.5rem);
+    padding: 1.25rem;
+    border-radius: 16px;
+  }
+
+  .summary-title {
+    font-size: 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .summary-card,
+  .summary-form-card,
+  .summary-form {
+    padding: 12px;
+    border-radius: 10px;
+    margin-bottom: 12px;
+  }
+
+  .summary-table {
+    min-width: 600px;
+    font-size: 12px;
+  }
+
+  .summary-table th,
+  .summary-table td {
+    padding: 6px 8px;
+    font-size: 12px;
     min-width: 80px;
+  }
+
+  .summary-table button {
+    padding: 4px 8px;
+    font-size: 12px;
+    min-width: 50px;
   }
 
   .summary-form input,
   .summary-form select,
   .summary-form button {
-    font-size: 0.95rem;
-    width: 100%;
-    margin-bottom: 7px;
-    border-radius: 8px;
-    padding: 9px;
-  }
-
-  .summary-form .other-field {
-    padding: 6px;
+    font-size: 16px;
+    padding: 10px;
     border-radius: 8px;
   }
 
-  .summary-form .other-names input {
-    width: 100%;
-  }
-  .summary-year-row {
-    flex-direction: column;
-    gap: 4px;
-  }
-  .summary-year-col {
-    min-width: 0;
+  .summary-year-col input {
+    padding: 10px;
+    font-size: 16px;
   }
 }

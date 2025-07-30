@@ -1,34 +1,334 @@
-/* GunBorrowing.css */
-/* พื้นหลังและ layout หลัก */
+/* GunBorrowing.css - Home-like design pattern */
 .gun-borrowing-bg {
   min-height: 100vh;
+  padding: 2rem;
   background: #e0e5ec;
-  padding: 60px 0 32px 0;
-  width: 100vw;
-  max-width: 100%;
+  padding-top: 50px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-/* กล่องหลัก */
-.gun-borrowing-main {
-  max-width: 500px;
+.gun-borrowing-container {
+  width: 700px;
   margin: 0 auto;
   background: #e0e5ec;
   border-radius: 20px;
   box-shadow: 10px 10px 30px #c2c8d0, -10px -10px 30px #ffffff;
-  padding: 32px 24px;
-  margin-bottom: 32px;
+  padding: 30px 20px;
+  box-sizing: border-box;
+}
+
+.gun-borrowing-title {
+  font-size: 1.875rem;
+  font-weight: 600;
+  color: #2563eb;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.gun-borrowing-card {
+  background: #e0e5ec;
+  border-radius: 16px;
+  box-shadow: 6px 6px 16px #c2c8d0, -6px -6px 16px #ffffff;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border: none;
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* กล่องหลัก - legacy support */
+.gun-borrowing-main {
+  max-width: 100%;
+  margin: 0 auto;
+  background: #e0e5ec;
+  border-radius: 15px;
+  box-shadow: 8px 8px 20px #c2c8d0, -8px -8px 20px #ffffff;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+/* QR Scanner Section */
+.qr-section {
+  margin-bottom: 12px;
+}
+
+.qr-label {
+  font-weight: 500;
+  color: #1976d2;
+  font-size: 1rem;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.qr-reader {
+  width: 100%;
+  margin: 8px 0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.qr-scan-btn {
+  margin-bottom: 8px;
+  padding: 12px;
+  background: #e0e5ec;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: bold;
+  box-shadow: 6px 6px 10px #c2c8d0, -6px -6px 10px #ffffff;
+  transition: 0.3s;
+  color: #222;
+  width: auto;
+  font-size: 1rem;
+}
+
+.qr-scan-btn.user {
+  background: #2196f3;
+  color: white;
+  box-shadow: 0 2px 8px #c8ccd1;
+}
+
+.qr-scan-btn.gun {
+  background: #ff9800;
+  color: white;
+  box-shadow: 0 2px 8px #c8ccd1;
+}
+
+.qr-scan-btn:hover {
+  background: #d6dce4;
+}
+
+.qr-scan-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.qr-help-text {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 8px;
+  padding: 4px;
+  background: transparent;
+  border-radius: 0;
+}
+
+.qr-result {
+  margin-top: 8px;
+  color: #333;
+}
+
+.qr-result-value {
+  color: #4caf50;
+  font-weight: bold;
+}
+
+.qr-result-none {
+  color: #aaa;
+}
+
+/* Button Classes */
+.btn-reset {
+  padding: 12px;
+  background: #e0e5ec;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: bold;
+  box-shadow: 6px 6px 10px #c2c8d0, -6px -6px 10px #ffffff;
+  transition: 0.3s;
+  color: #222;
+  width: auto;
+  font-size: 1rem;
+  margin-bottom: 8px;
+}
+
+.btn-reset:hover {
+  background: #d6dce4;
+}
+
+.btn-toggle-form {
+  width: 100%;
+  margin-top: 16px;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #e0e5ec;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: bold;
+  box-shadow: 6px 6px 10px #c2c8d0, -6px -6px 10px #ffffff;
+  transition: 0.3s;
+  color: #222;
+  font-size: 1rem;
+}
+
+/* Manual Form */
+.manual-form {
+  margin: 16px 0 0 0;
+  background: #f7fafd;
+  border-radius: 10px;
+  padding: 16px;
+  border: 1px solid #e3f2fd;
+}
+
+.manual-form-title {
+  margin-bottom: 16px;
+  color: #1976d2;
+  font-weight: 600;
+  font-size: 1rem;
+  text-align: center;
+}
+
+/* Input และ Button Styling - ตามมาตรฐาน Home */
+.manual-input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  background: #e0e5ec;
+  box-shadow: inset 4px 4px 6px #c8ccd1, inset -4px -4px 6px #f0f5fa;
+  font-size: 1em;
+  margin-bottom: 1rem;
+  box-sizing: border-box;
+}
+
+.manual-submit:hover {
+  background: #1e40af;
+}
+
+/* Status Messages */
+.loading-message {
+  background: #e3f2fd;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 8px 0;
+  text-align: center;
+  border: 1px solid #2196f3;
+}
+
+.loading-text {
+  color: #1976d2;
+  font-size: 1rem;
+}
+
+.network-error {
+  background: #ffebee;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 8px 0;
+  text-align: center;
+  border: 1px solid #f44336;
+}
+
+.network-error-title {
+  color: #d32f2f;
+  font-size: 1rem;
+  margin-bottom: 8px;
+}
+
+.network-error-text {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.retry-btn {
+  background: #2196f3;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  cursor: pointer;
+}
+
+/* Public Gun Section */
+.public-gun-section {
+  background: #f7fafd;
+  border-radius: 10px;
+  padding: 16px;
+  margin: 24px 0;
+}
+
+.public-gun-title {
+  color: #1976d2;
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+
+.public-gun-form {
+  display: flex;
+  gap: 8px;
+  margin: 16px 0 12px 0;
+}
+
+.public-gun-input {
+  flex: 1;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  background: #e0e5ec;
+  box-shadow: inset 4px 4px 6px #c8ccd1, inset -4px -4px 6px #f0f5fa;
+  font-size: 1em;
+}
+
+.public-gun-add-btn {
+  min-width: 90px;
+}
+
+.public-gun-status {
+  color: #1976d2;
+  margin-bottom: 8px;
+}
+
+.public-gun-table-container {
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.public-gun-table {
+  width: 100%;
+  font-size: 1rem;
+}
+
+.public-gun-table th {
+  background: #f5f5f5;
+  padding: 8px;
+  border: 1px solid #ddd;
+}
+
+.public-gun-table td {
+  padding: 8px;
+  border: 1px solid #ddd;
+}
+
+.public-gun-delete-btn {
+  background: #e53935;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 12px;
+  cursor: pointer;
+}
+
+.no-data-row {
+  color: #888;
+  text-align: center;
 }
 
 .gun-borrowing-main h1 {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 600;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   color: #1976d2;
 }
 
 .gun-borrowing-main p {
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   color: #333;
+  font-size: 0.95rem;
 }
 
 .gun-borrowing-main button {
@@ -37,11 +337,11 @@
   padding: 12px;
   background: #e0e5ec;
   border: none;
-  border-radius: 10px;
+  border-radius: 8px;
   font-size: 1rem;
   font-weight: bold;
   color: #1976d2;
-  box-shadow: 6px 6px 10px #c2c8d0, -6px -6px 10px #ffffff;
+  box-shadow: 4px 4px 8px #c2c8d0, -4px -4px 8px #ffffff;
   cursor: pointer;
   transition: 0.2s;
 }
@@ -65,40 +365,46 @@
   color: #e53935;
 }
 
+.btn-toggle-form:hover {
+  background: #d6dce4;
+}
+
 /* ปุ่มพิมพ์รายงาน */
 .gun-borrowing-print-btn {
-  background: #1976d2;
+  background: #2563eb;
   color: #fff;
   border: none;
-  border-radius: 8px;
-  padding: 10px 28px;
-  font-weight: 600;
+  border-radius: 10px;
+  padding: 12px 28px;
+  font-weight: bold;
   font-size: 1rem;
   cursor: pointer;
-  box-shadow: 4px 4px 12px #c2c8d0;
-  transition: background 0.2s;
+  box-shadow: 0 2px 8px #c8ccd1;
+  transition: 0.3s;
 }
 .gun-borrowing-print-btn:hover {
-  background: #125ea7;
+  background: #1e40af;
 }
 
 /* กล่องแสดงผล 3 ส่วน */
 .gun-borrowing-list-row {
-  max-width: 900px;
-  margin: 32px auto 0 auto;
+  max-width: 100%;
+  margin: 20px auto 0 auto;
   display: flex;
-  gap: 24px;
+  gap: 16px;
   justify-content: center;
   align-items: flex-start;
+  flex-wrap: wrap;
 }
 
 .gun-borrowing-list-card {
   flex: 1;
+  min-width: 280px;
   background: #e0e5ec;
-  border-radius: 16px;
-  box-shadow: 6px 6px 16px #c2c8d0, -6px -6px 16px #f0f5fa;
-  padding: 24px 12px;
-  min-width: 0;
+  border-radius: 12px;
+  box-shadow: 4px 4px 12px #c2c8d0, -4px -4px 12px #f0f5fa;
+  padding: 16px 8px;
+  margin-bottom: 16px;
   overflow-x: auto;
 }
 
@@ -173,45 +479,171 @@
 .text-center {
   text-align: center;
 }
+
 .mt-4 {
   margin-top: 1.5rem;
 }
 
-/* Responsive */
-@media (max-width: 900px) {
-  .gun-borrowing-list-row {
-    flex-direction: column;
-    gap: 16px;
-    max-width: 100vw;
-  }
-  .gun-borrowing-list-card {
-    min-width: 0;
-    max-width: 100vw;
-    border-radius: 10px;
-    padding: 16px 4px;
-  }
+.status-returned {
+  color: #388e3c;
+  font-weight: 600;
 }
 
-@media (max-width: 600px) {
+.table-wrapper {
+  overflow-x: auto;
+  border-radius: 10px;
+  margin-top: 8px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
   .gun-borrowing-bg {
     padding: 0.5rem;
-    padding-top: 5px;
+    padding-top: 60px;
+    background: #e0e5ec;
   }
-  .gun-borrowing-main {
+
+  .gun-borrowing-container {
     max-width: 100vw;
-    padding: 1.2rem 0.5rem;
-    border-radius: 0;
-    box-shadow: none;
+    padding: 16px 12px;
+    border-radius: 12px;
+    box-shadow: 6px 6px 16px #c2c8d0, -6px -6px 16px #ffffff;
+    margin: 0;
+    width: calc(100% - 1rem);
   }
+
+  .gun-borrowing-title {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .gun-borrowing-card {
+    padding: 1rem;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    box-shadow: 4px 4px 12px #c2c8d0, -4px -4px 12px #ffffff;
+  }
+
+  .gun-borrowing-main {
+    width: 100%;
+    padding: 0.75rem;
+    border-radius: 10px;
+    margin-bottom: 0.75rem;
+  }
+
+  /* QR Section Mobile */
+  .qr-scan-btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    border-radius: 10px;
+  }
+
+  /* Button Mobile */
+  .btn-reset {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+  }
+
+  .btn-toggle-form {
+    padding: 12px;
+    font-size: 16px;
+    border-radius: 10px;
+  }
+
+  /* Manual Form Mobile */
+  .manual-input {
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 16px;
+  }
+
+  .manual-submit {
+    padding: 12px;
+    font-size: 16px;
+    border-radius: 10px;
+  }
+
+  /* Public Gun Mobile */
+  .public-gun-section {
+    padding: 1rem;
+    margin: 1rem 0;
+  }
+
+  .gun-borrowing-main h1 {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .gun-borrowing-main p {
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .gun-borrowing-main button {
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 8px;
+    margin-top: 0.5rem;
+  }
+
+  .gun-borrowing-print-btn {
+    padding: 10px 16px;
+    font-size: 16px;
+    border-radius: 8px;
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+
+  .gun-borrowing-list-row {
+    flex-direction: column;
+    gap: 1rem;
+    margin: 1rem auto 0;
+  }
+
   .gun-borrowing-list-card {
-    padding: 10px 2px;
-    border-radius: 0;
-    box-shadow: none;
+    width: 100%;
+    min-width: auto;
+    padding: 1rem 0.5rem;
+    border-radius: 10px;
+    margin-bottom: 1rem;
   }
-  .gun-borrowing-list-card table,
+
+  .gun-borrowing-list-card h2 {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .gun-borrowing-list-card p {
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+  }
+
+  /* Table wrapper for horizontal scroll */
+  .table-wrapper {
+    overflow-x: auto;
+    border-radius: 8px;
+    margin-top: 0.5rem;
+  }
+
+  .gun-borrowing-list-card table {
+    min-width: 350px;
+    font-size: 0.85rem;
+    border-radius: 6px;
+  }
+
   .gun-borrowing-list-card th,
   .gun-borrowing-list-card td {
-    font-size: 0.95rem;
-    padding: 6px 2px;
+    padding: 6px 4px;
+    font-size: 0.85rem;
+    min-width: 60px;
+  }
+
+  .gun-borrowing-status {
+    font-size: 1rem;
+    margin: 0.75rem 0;
   }
 }

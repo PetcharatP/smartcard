@@ -18,7 +18,7 @@ export default function ViewProfile() {
     const [club1, setClub1] = useState('');
     const [club2, setClub2] = useState('');
     const [club3, setClub3] = useState('');
-    const apiUrl = import.meta.env.VITE_API_URL;
+    const apiUrl = process.env.NODE_ENV === 'production' ? '' : (import.meta.env.VITE_API_URL || '');
     const navigate = useNavigate();
     const majorOptions = [
         { value: "ME", label: "วิศวกรรมเครื่องกล" },
@@ -38,7 +38,7 @@ export default function ViewProfile() {
             navigate('/login');
         } else {
             console.log('API URL:', apiUrl);
-            fetch(`${apiUrl}/api/user/me`, {
+            fetch(`/api/user/me`, {
                 headers: { Authorization: `Bearer ${token}` },
             })
                 .then(res => res.json())
@@ -129,16 +129,16 @@ return (
                     <div className="view-profile-row"><span>สิทธิ์ผู้ดูแล: </span>{admin ? 'ผู้ดูแลระบบ' : 'ทั่วไป'}</div>
                     <div className="view-profile-row">
                         <span>ชมรม: </span>
-                        <ul style={{ margin: 0, paddingLeft: 18 }}>
+                        <ul className="view-profile-clubs-list">
                             {club1 && <li>{club1}</li>}
                             {club2 && <li>{club2}</li>}
                             {club3 && <li>{club3}</li>}
-                            {!club1 && !club2 && !club3 && <li style={{ color: "#aaa" }}>-</li>}
+                            {!club1 && !club2 && !club3 && <li className="view-profile-no-club">-</li>}
                         </ul>
                     </div>
                     <div className="view-profile-card-subtitle">ประวัติการปรับคะแนน</div>
                     <div className="view-profile-history">
-                        {adjustments.length === 0 && <div style={{ color: "#aaa" }}>ไม่มีข้อมูล</div>}
+                        {adjustments.length === 0 && <div className="view-profile-no-data">ไม่มีข้อมูล</div>}
                         {adjustments.map(adj => (
                             <div key={adj.id} className="view-profile-history-item">
                                 <div>วันที่: {new Date(adj.date).toLocaleDateString()}</div>
@@ -154,7 +154,7 @@ return (
                     {qrCodeImage && (
                         <img src={qrCodeImage} alt="QR Code" className="view-profile-qr-img" />
                     )}
-                    <div className="view-profile-card-title" style={{ margin: "12px 0" }}>Gun QR Code</div>
+                    <div className="view-profile-card-title view-profile-qr-title">Gun QR Code</div>
                     {gunQrCodeImage && (
                         <img src={gunQrCodeImage} alt="Gun QR Code" className="view-profile-qr-img" />
                     )}

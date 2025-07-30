@@ -11,7 +11,7 @@ export default function BehaviorPoint() {
   const [major, setMajor] = useState('');
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState('');
-  const apiUrl = import.meta.env.VITE_API_URL;
+  const apiUrl = process.env.NODE_ENV === 'production' ? '' : (import.meta.env.VITE_API_URL || '');
   const navigate = useNavigate();
   const majorOptions = [
     { value: "ME", label: "วิศวกรรมเครื่องกล" },
@@ -31,7 +31,7 @@ export default function BehaviorPoint() {
       setLoading(false);
       return;
     }
-    fetch(`${apiUrl}/api/user/me`, {
+    fetch(`/api/user/me`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -72,10 +72,13 @@ export default function BehaviorPoint() {
   }
 
   return (
-    <div className="behavior-point-container">
-      <div className="behavior-card">
-        <h2>Behavior Point</h2>
-        <div className="profile-section">
+    <div className="behavior-point-bg">
+      <div className="behavior-point-container">
+        <h1 className="behavior-point-title">คะแนนความประพฤติ</h1>
+        
+        <div className="behavior-card">
+          <h2>ข้อมูลผู้ใช้</h2>
+          <div className="profile-section">
           {profileImage ? (
             <img src={profileImage} alt="Profile" className="profile-img" />
           ) : (
@@ -121,6 +124,7 @@ export default function BehaviorPoint() {
             </li>
           ))}
         </ul>
+        </div>
       </div>
     </div>
   );

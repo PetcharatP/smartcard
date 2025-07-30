@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import './UserList.css';
 
 const UserList = () => {
   const [users, setUsers] = useState([]);
-  const apiUrl = import.meta.env.VITE_API_URL;
+  const apiUrl = process.env.NODE_ENV === 'production' ? '' : (import.meta.env.VITE_API_URL || '');
 
   useEffect(() => {
-    fetch(`${apiUrl}/api/users`)
+    fetch(`/api/users`)
       .then(res => res.json())
       .then(data => setUsers(data))
       .catch(err => console.error(err));
@@ -28,7 +29,7 @@ const UserList = () => {
 
   // อัปเดตสถานะ admin
   const handleAdminChange = async (userid, newAdmin) => {
-    await fetch(`${apiUrl}/api/user/setAdmin`, {
+    await fetch(`/api/user/setAdmin`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userid, admin: newAdmin })
@@ -44,62 +45,66 @@ const UserList = () => {
   };
 
   return (
-    <div style={{ overflowX: 'auto' }}>
-      <table border="1" cellPadding="8" style={{ borderCollapse: 'collapse', minWidth: 900 }}>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Username</th>
-            <th>Real Name</th>
-            <th>UserID</th>
-            <th>Blood</th>
-            <th>Gun Number</th>
-            <th>Point</th>
-            <th>Major</th>
-            <th>Profile Image</th>
-            <th>Admin</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.length === 0 ? (
+    <div className="userlist-bg">
+      <div className="userlist-container">
+        <h1 className="userlist-title">รายชื่อผู้ใช้ระบบ</h1>
+        <table className="userlist-table">
+          <thead>
             <tr>
-              <td colSpan="10" align="center">No users found.</td>
+              <th>ID</th>
+              <th>Username</th>
+              <th>Real Name</th>
+              <th>UserID</th>
+              <th>Blood</th>
+              <th>Gun Number</th>
+              <th>Point</th>
+              <th>Major</th>
+              <th>Profile Image</th>
+              <th>Admin</th>
             </tr>
-          ) : (
-            users.map(user => (
-              <tr key={user.id}>
-                <td>{user.id}</td>
-                <td>{user.username}</td>
-                <td>{user.realname}</td>
-                <td>{user.userid}</td>
-                <td>{user.blood}</td>
-                <td>{user.gunNumber}</td>
-                <td>{user.point}</td>
-                <td>{user.major}</td>
-                <td>
-                  {user.profileImage && user.profileImage.data ? (
-                    <img
-                      src={bufferToImage(user.profileImage)}
-                      alt="profile"
-                      style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: '50%' }}
-                    />
-                  ) : (
-                    'No Image'
-                  )}
-                </td>
-                <td>
-                  <input
-                    type="checkbox"
-                    checked={!!user.admin}
-                    onChange={e => handleAdminChange(user.userid, e.target.checked)}
-                  />{' '}
-                  {user.admin ? 'YES' : 'NO'}
-                </td>
+          </thead>
+          <tbody>
+            {users.length === 0 ? (
+              <tr>
+                <td colSpan="10" className="userlist-loading">ไม่พบข้อมูลผู้ใช้</td>
               </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+            ) : (
+              users.map(user => (
+                <tr key={user.id}>
+                  <td>{user.id}</td>
+                  <td>{user.username}</td>
+                  <td>{user.realname}</td>
+                  <td>{user.userid}</td>
+                  <td>{user.blood}</td>
+                  <td>{user.gunNumber}</td>
+                  <td>{user.point}</td>
+                  <td>{user.major}</td>
+                  <td>
+                    {user.profileImage && user.profileImage.data ? (
+                      <img
+                        src={bufferToImage(user.profileImage)}
+                        alt="profile"
+                        className="userlist-avatar"
+                      />
+                    ) : (
+                      <div className="userlist-no-avatar">No Image</div>
+                    )}
+                  </td>
+                  <td>
+                    <input
+                      type="checkbox"
+                      checked={!!user.admin}
+                      onChange={e => handleAdminChange(user.userid, e.target.checked)}
+                      className="userlist-checkbox"
+                    />{' '}
+                    {user.admin ? 'YES' : 'NO'}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };

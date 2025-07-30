@@ -29,11 +29,26 @@ export default function Summary() {
   const [detailObj, setDetailObj] = useState(null);
   const [detailSummaryId, setDetailSummaryId] = useState(null);
 
-  const apiUrl = import.meta.env.VITE_API_URL;
+  // Custom popup states
+  const [showPopup, setShowPopup] = useState(false);
+  const [popupMessage, setPopupMessage] = useState('');
+  const [popupType, setPopupType] = useState('success'); // 'success' or 'error'
+
+  const apiUrl = process.env.NODE_ENV === 'production' ? '' : (import.meta.env.VITE_API_URL || '');
+
+  const showMessage = (message, type = 'success') => {
+    setPopupMessage(message);
+    setPopupType(type);
+    setShowPopup(true);
+  };
+
+  const closePopup = () => {
+    setShowPopup(false);
+  };
   // ดึงใบยอดทั้งหมด (ที่ยังไม่มีการลงยอดจำหน่าย)
   useEffect(() => {
     console.log('API URL:', apiUrl);
-    fetch(`${apiUrl}/api/summary`)
+    fetch(`/api/summary`)
       .then(res => res.json())
       .then(data => {
         setSummaries(data.data || []);
@@ -44,7 +59,7 @@ export default function Summary() {
   // ดึง other จาก user (authme)
   useEffect(() => {
     const token = localStorage.getItem('token');
-    fetch(`${apiUrl}/api/user/me`, {
+    fetch(`/api/user/me`, {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -87,26 +102,39 @@ export default function Summary() {
   // handle ส่งยอดจำหน่าย (เฉพาะที่ติ๊ก)
   const handleUserSendSummary = async () => {
     if (!userSummarySelect) {
-      alert('กรุณาเลือกใบยอด');
+      showMessage('กรุณาเลือกใบยอดที่ต้องการลงยอด', 'error');
       return;
     }
+    
+    // ตรวจสอบว่ามีการเลือกรายการหรือไม่
+    if (userOtherChecked === null || userOtherChecked === undefined) {
+      showMessage('กรุณาเลือกรายการจำหน่ายอย่างน้อย 1 รายการ', 'error');
+      return;
+    }
+    
     const summary = userSummaries.find(s => String(s.id) === String(userSummarySelect));
     if (!summary) {
-      alert('ไม่พบใบยอดที่เลือก');
+      showMessage('ไม่พบใบยอดที่เลือก กรุณาลองใหม่อีกครั้ง', 'error');
       return;
     }
+    
     let oldOther = {};
     try {
       oldOther = summary.other ? JSON.parse(summary.other) : {};
-    } catch {}
-    const otherObj = { ...oldOther };
-
-    // ตรวจสอบว่ามีการเลือกหรือไม่
-    if (userOtherChecked === null || userOtherChecked === undefined) {
-      alert('กรุณาเลือกอย่างน้อย 1 รายการ');
+    } catch {
+      showMessage('เกิดข้อผิดพลาดในการอ่านข้อมูลใบยอด', 'error');
       return;
     }
+    
+    const otherObj = { ...oldOther };
+
     const userNameWithYear = userRealname && userYear ? `${userRealname}(${userYear})` : userRealname || '';
+    
+    if (!userNameWithYear) {
+      showMessage('ไม่พบข้อมูลชื่อผู้ใช้ กรุณาตรวจสอบโปรไฟล์ของคุณ', 'error');
+      return;
+    }
+    
     let isDuplicate = false;
     Object.values(oldOther).forEach(v => {
       if (Array.isArray(v.names) && v.names.includes(userNameWithYear)) {
@@ -114,41 +142,56 @@ export default function Summary() {
       }
     });
     if (isDuplicate) {
-      alert('คุณได้ส่งยอดในใบนี้ไปแล้ว');
+      showMessage('คุณได้ส่งยอดจำหน่ายในใบนี้ไปแล้ว', 'error');
       return;
     }
 
     const f = userOtherFields[userOtherChecked];
-    if (f && f.key) {
-      const oldCount = Number(oldOther[f.key]?.count) || 0;
-      const newCount = Number(f.value) || 1;
-      const oldNames = Array.isArray(oldOther[f.key]?.names) ? oldOther[f.key].names : [];
-      const newNames = userNameWithYear ? [userNameWithYear] : [];
-      const allNames = Array.from(new Set([...oldNames, ...newNames].filter(Boolean)));
-      otherObj[f.key] = {
-        count: oldCount + newCount,
-        names: allNames
-      };
-    } else {
-      alert('กรุณาเลือกอย่างน้อย 1 รายการ');
+    if (!f || !f.key) {
+      showMessage('ไม่พบรายการจำหน่ายที่เลือก กรุณาลองใหม่อีกครั้ง', 'error');
       return;
     }
-    const res = await fetch(`${apiUrl}/api/summary?id=${summary.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ...summary,
-        other: otherObj
-      })
-    });
-    if (res.ok) {
-      alert('ส่งยอดจำหน่ายสำเร็จ');
-      setUserSummarySelect('');
-      setUserOtherChecked(null);
-      fetch(`${apiUrl}/api/summary`)
-        .then(res => res.json())
-        .then(data => setSummaries(data.data || []));
-      setShowUserForm(false);
+    
+    const oldCount = Number(oldOther[f.key]?.count) || 0;
+    const newCount = Number(f.value) || 1;
+    const oldNames = Array.isArray(oldOther[f.key]?.names) ? oldOther[f.key].names : [];
+    const newNames = userNameWithYear ? [userNameWithYear] : [];
+    const allNames = Array.from(new Set([...oldNames, ...newNames].filter(Boolean)));
+    
+    otherObj[f.key] = {
+      count: oldCount + newCount,
+      names: allNames
+    };
+    
+    try {
+      const res = await fetch(`/api/summary?id=${summary.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...summary,
+          other: otherObj
+        })
+      });
+      
+      if (res.ok) {
+        showMessage('ส่งยอดจำหน่ายสำเร็จ! 🎉', 'success');
+        setUserSummarySelect('');
+        setUserOtherChecked(null);
+        // รีเฟรชข้อมูล
+        fetch(`/api/summary`)
+          .then(res => res.json())
+          .then(data => {
+            setSummaries(data.data || []);
+            setUserSummaries(data.data || []);
+          });
+        setShowUserForm(false);
+      } else {
+        const errorData = await res.json();
+        showMessage('เกิดข้อผิดพลาดในการส่งยอด: ' + (errorData.message || 'กรุณาลองใหม่อีกครั้ง'), 'error');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      showMessage('เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต', 'error');
     }
   };
 
@@ -225,13 +268,40 @@ export default function Summary() {
 
   const handleDelete = async id => {
     if (window.confirm('ต้องการลบข้อมูลนี้ใช่หรือไม่?')) {
-      await fetch(`${apiUrl}/api/summary?id=${id}`, { method: 'DELETE' });
+      await fetch(`/api/summary?id=${id}`, { method: 'DELETE' });
       setSummaries(summaries => summaries.filter(item => item.id !== id));
     }
   };
 
   const handleSubmit = async e => {
     e.preventDefault();
+    
+    // ตรวจสอบข้อมูลที่จำเป็น
+    if (!form.date) {
+      showMessage('กรุณาเลือกวันที่', 'error');
+      return;
+    }
+    if (!form.time) {
+      showMessage('กรุณากรอกเวลา', 'error');
+      return;
+    }
+    if (!form.battalion) {
+      showMessage('กรุณาเลือกกองพัน', 'error');
+      return;
+    }
+    if (!form.company) {
+      showMessage('กรุณาเลือกกองร้อย', 'error');
+      return;
+    }
+    if (!form.total || Number(form.total) <= 0) {
+      showMessage('กรุณากรอกจำนวนคนทั้งหมดที่ถูกต้อง', 'error');
+      return;
+    }
+    if (!form.note) {
+      showMessage('กรุณากรอกชื่อตัวแทนชั้น', 'error');
+      return;
+    }
+    
     const otherObj = {};
     otherFields.forEach(f => {
       if (f.key) {
@@ -244,8 +314,8 @@ export default function Summary() {
     });
     const method = editId ? 'PUT' : 'POST';
     const url = editId
-      ? `${apiUrl}/api/summary?id=${editId}`
-      : `${apiUrl}/api/summary`;
+      ? `/api/summary?id=${editId}`
+      : `/api/summary`;
     const bodyData = {
       ...form,
       battalion: Number(form.battalion),
@@ -258,24 +328,34 @@ export default function Summary() {
       total_year_2: form.total_year_2,
       total_year_1: form.total_year_1
     };
-    const res = await fetch(url, {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(bodyData)
-    });
-    const data = await res.json();
-    if (data.success) {
-      if (editId) {
-        setSummaries(summaries.map(s => (s.id === editId ? data.data : s)));
-        setEditId(null);
-      } else {
-        setSummaries([data.data, ...summaries]);
-      }
-      setForm({
-        date: '', time: '', battalion: '', company: '', total: '', other: '', note: '',
-        total_year_5: '', total_year_4: '', total_year_3: '', total_year_2: '', total_year_1: ''
+    
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bodyData)
       });
-      setOtherFields([{ key: '', value: '', names: [''], counted: true }]);
+      const data = await res.json();
+      if (data.success) {
+        if (editId) {
+          setSummaries(summaries.map(s => (s.id === editId ? data.data : s)));
+          setEditId(null);
+          showMessage('แก้ไขข้อมูลสำเร็จ! ✅', 'success');
+        } else {
+          setSummaries([data.data, ...summaries]);
+          showMessage('บันทึกใบยอดสำเร็จ! 🎉', 'success');
+        }
+        setForm({
+          date: '', time: '', battalion: '', company: '', total: '', other: '', note: '',
+          total_year_5: '', total_year_4: '', total_year_3: '', total_year_2: '', total_year_1: ''
+        });
+        setOtherFields([{ key: '', value: '', names: [''], counted: true }]);
+      } else {
+        showMessage('เกิดข้อผิดพลาด: ' + (data.message || 'ไม่สามารถบันทึกข้อมูลได้'), 'error');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      showMessage('เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง', 'error');
     }
   };
 
@@ -329,7 +409,7 @@ export default function Summary() {
     }
 
     // อัปเดตไปยัง backend
-    await fetch(`${apiUrl}/api/summary?id=${summaryId}`, {
+    await fetch(`/api/summary?id=${summaryId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -353,21 +433,25 @@ export default function Summary() {
   };
 
   return (
-    <div className="summary-container">
-      {/* ----------- ตารางสถานะการส่งยอดจำหน่ายของผู้ใช้ ----------- */}
-      <div style={{ marginBottom: 32 }}>
-        <h4 style={{ color: '#007bff', marginBottom: 8 }}>สถานะการส่งยอดจำหน่ายของคุณ</h4>
-        <table className="summary-table" style={{ minWidth: 400 }}>
-          <thead>
-            <tr>
-              <th>วันที่</th>
-              <th>เวลา</th>
-              <th>กองพัน</th>
-              <th>กองร้อย</th>
-              <th>สถานะ</th>
-              <th>รายการที่ส่ง</th>
-            </tr>
-          </thead>
+    <div className="summary-bg">
+      <div className="summary-container">
+        <h1 className="summary-title">ระบบสรุปยอดจำหน่าย</h1>
+        
+        {/* ----------- ตารางสถานะการส่งยอดจำหน่ายของผู้ใช้ ----------- */}
+        <div className="summary-card">
+          <h4 className="summary-section-title">สถานะการส่งยอดจำหน่ายของคุณ</h4>
+          <div className="table-wrapper">
+            <table className="summary-table">
+              <thead>
+                <tr>
+                  <th>วันที่</th>
+                  <th>เวลา</th>
+                  <th>กองพัน</th>
+                  <th>กองร้อย</th>
+                  <th>สถานะ</th>
+                  <th>รายการที่ส่ง</th>
+                </tr>
+              </thead>
           <tbody>
             {userSummaries.map(s => {
               let sent = false;
@@ -390,9 +474,9 @@ export default function Summary() {
                   <td>{s.company}</td>
                   <td>
                     {sent ? (
-                      <span style={{ color: '#19d254', fontWeight: 500 }}>ส่งจำหน่ายแล้ว</span>
+                      <span className="status-sent">ส่งจำหน่ายแล้ว</span>
                     ) : (
-                      <span style={{ color: '#e53935', fontWeight: 500 }}>ยังไม่ได้ส่ง</span>
+                      <span className="status-not-sent">ยังไม่ได้ส่ง</span>
                     )}
                   </td>
                   <td>
@@ -410,6 +494,7 @@ export default function Summary() {
             })}
           </tbody>
         </table>
+        </div>
       </div>
       {/* ----------- ส่วนของผู้ใช้ (User) ----------- */}
       <div style={{ marginBottom: 32, border: '2px solid #007bff', borderRadius: 8, padding: 16, background: '#f8faff' }}>
@@ -525,15 +610,41 @@ export default function Summary() {
         <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
           <div style={{ flex: 1 }}>
             <b>วันที่ :</b>
-            <input
-              name="date"
-              type="date"
-              placeholder="เช่น 2025-06-12"
-              value={form.date}
-              onChange={handleChange}
-              required
-              style={{ width: '100%' }}
-            />
+            <div style={{ position: 'relative', display: 'inline-block', width: '100%' }}>
+              <input
+                name="date"
+                type="date"
+                value={form.date}
+                onChange={handleChange}
+                required
+                style={{ 
+                  width: '100%',
+                  padding: '8px 12px',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  fontSize: '14px',
+                  background: 'white',
+                  cursor: 'pointer',
+                  colorScheme: 'light'
+                }}
+                onFocus={(e) => e.target.showPicker && e.target.showPicker()}
+              />
+              {!form.date && (
+                <div 
+                  style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '12px',
+                    transform: 'translateY(-50%)',
+                    color: '#999',
+                    pointerEvents: 'none',
+                    fontSize: '14px'
+                  }}
+                >
+                  เลือกวันที่
+                </div>
+              )}
+            </div>
           </div>
         </div>
         <div style={{ flex: 1 }}>
@@ -608,7 +719,7 @@ export default function Summary() {
                     {openCompany[`${battalion}-${company}`] ? '▼' : '►'} กองร้อย {company}
                   </button>
                   {openCompany[`${battalion}-${company}`] && (
-                    <div style={{ overflowX: 'auto' }}>
+                    <div className="table-wrapper">
                       <table className="summary-table">
                         <thead>
                           <tr>
@@ -637,39 +748,32 @@ export default function Summary() {
                                 <td data-label="วันที่">{s.date}</td>
                                 <td data-label="แถวกี่โมง">{s.time}</td>
                                 <td data-label="ทั้งหมด">{s.total}</td>
-                                <td data-label="จำหน่าย" style={{ fontSize: '0.92em', wordBreak: 'break-word', whiteSpace: 'normal' }}>
+                                <td data-label="จำหน่าย" className="summary-sale-cell">
                                   {obj && Object.entries(obj).length > 0 ? (
                                     <button
                                       type="button"
-                                      style={{
-                                        background: '#1976d2',
-                                        color: '#fff',
-                                        border: 'none',
-                                        borderRadius: 4,
-                                        padding: '2px 12px',
-                                        fontSize: '0.95em',
-                                        cursor: 'pointer',
-                                        marginBottom: 4
-                                      }}
+                                      className="summary-view-btn"
                                       onClick={() => handleShowSaleList(obj, s.id)}
                                     >
                                       ดูรายการจำหน่าย
                                     </button>
                                   ) : (
-                                    <span style={{ color: '#888' }}>-</span>
+                                    <span className="summary-no-data">-</span>
                                   )}
                                 </td>
                                 <td data-label="ยอดที่เหลือ">
-                                  <span style={{ color: remainRow < 0 ? 'red' : 'green' }}>{remainRow}</span>
+                                  <span className={remainRow < 0 ? 'summary-remain-negative' : 'summary-remain-positive'}>
+                                    {remainRow}
+                                  </span>
                                 </td>
                                 <td data-label="ตัวแทนชั้น">{s.note}</td>
                                 <td data-label="แก้ไข">
-                                  <button type="button" onClick={() => handleEdit(s)}>
+                                  <button type="button" className="summary-edit-btn" onClick={() => handleEdit(s)}>
                                     แก้ไข
                                   </button>
                                   <button
                                     type="button"
-                                    style={{ marginLeft: 8, color: 'red', border: 'none', background: 'none', cursor: 'pointer' }}
+                                    className="summary-delete-btn"
                                     onClick={() => handleDelete(s.id)}
                                     title="ลบ"
                                   >
@@ -767,6 +871,75 @@ export default function Summary() {
           </div>
         </div>
       )}
+      
+      {/* Custom Popup */}
+      {showPopup && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 10000
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            padding: '30px',
+            borderRadius: '15px',
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.3)',
+            textAlign: 'center',
+            maxWidth: '400px',
+            margin: '20px',
+            border: `3px solid ${popupType === 'success' ? '#4CAF50' : '#f44336'}`
+          }}>
+            <div style={{
+              fontSize: '3rem',
+              marginBottom: '15px'
+            }}>
+              {popupType === 'success' ? '✅' : '❌'}
+            </div>
+            <h3 style={{
+              margin: '0 0 15px 0',
+              color: popupType === 'success' ? '#4CAF50' : '#f44336',
+              fontSize: '1.3rem'
+            }}>
+              {popupType === 'success' ? 'สำเร็จ!' : 'เกิดข้อผิดพลาด!'}
+            </h3>
+            <p style={{
+              margin: '0 0 25px 0',
+              color: '#666',
+              fontSize: '1.1rem',
+              lineHeight: '1.5'
+            }}>
+              {popupMessage}
+            </p>
+            <button
+              onClick={closePopup}
+              style={{
+                backgroundColor: popupType === 'success' ? '#4CAF50' : '#f44336',
+                color: 'white',
+                border: 'none',
+                padding: '12px 30px',
+                borderRadius: '8px',
+                fontSize: '1.1rem',
+                fontWeight: '500',
+                cursor: 'pointer',
+                minWidth: '100px',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseOver={(e) => e.target.style.opacity = '0.9'}
+              onMouseOut={(e) => e.target.style.opacity = '1'}
+            >
+              ตกลง
+            </button>
+          </div>
+        </div>
+      )}
+      </div>
     </div>
   );
 }

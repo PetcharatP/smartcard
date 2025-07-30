@@ -27,12 +27,15 @@ export default function EditProfile() {
   const [club3, setClub3] = useState('');
   const [year, setYear] = useState('');
   const [otherFields, setOtherFields] = useState([{ key: '', value: 1 }]);
+  const [showPopup, setShowPopup] = useState(false);
+  const [popupMessage, setPopupMessage] = useState('');
+  const [popupType, setPopupType] = useState('success'); // 'success' or 'error'
   const navigate = useNavigate();
-  const apiUrl = import.meta.env.VITE_API_URL;
+  const apiUrl = process.env.NODE_ENV === 'production' ? '' : (import.meta.env.VITE_API_URL || '');
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    fetch(`${apiUrl}/api/user/me`, {
+    fetch(`/api/user/me`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
@@ -94,6 +97,19 @@ export default function EditProfile() {
     setOtherFields(fields => fields.filter((_, i) => i !== idx));
   };
 
+  const showMessage = (message, type = 'success') => {
+    setPopupMessage(message);
+    setPopupType(type);
+    setShowPopup(true);
+  };
+
+  const closePopup = () => {
+    setShowPopup(false);
+    if (popupType === 'success') {
+      navigate('/');
+    }
+  };
+
   const handleSave = (e) => {
     e.preventDefault();
     const token = localStorage.getItem('token');
@@ -110,7 +126,7 @@ export default function EditProfile() {
     formData.append('other', JSON.stringify(otherFields));
     if (profileImage) formData.append('profileImage', profileImage);
 
-    fetch(`${apiUrl}/api/user/update`, {
+    fetch(`/api/user/update`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
       body: formData,
@@ -118,106 +134,144 @@ export default function EditProfile() {
       .then((res) => res.json())
       .then((data) => {
         if (data.success) {
-          alert('Profile updated successfully');
-          navigate('/');
+          showMessage('บันทึกข้อมูลเรียบร้อยแล้ว! 🎉', 'success');
         } else {
-          alert('Failed to update profile');
+          showMessage('ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง', 'error');
         }
       })
       .catch((error) => {
         console.error('Error:', error);
-        alert('An error occurred while updating profile');
+        showMessage('เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้ง', 'error');
       });
   };
 
   return (
     <div className="edit-profile-minimal">
       <form className="edit-profile-form" onSubmit={handleSave}>
-        <div className="profile-img-block">
-          {previewImage && <img src={previewImage} alt="Preview" className="profile-img" />}
-          <input type="file" accept="image/*" onChange={handleImageChange} />
+        <h2 className="edit-profile-title">แก้ไขข้อมูลส่วนตัว</h2>
+        
+        <div className="section-container">
+          <h3 className="section-title">รูปโปรไฟล์</h3>
+          <div className="profile-img-block">
+            {previewImage && <img src={previewImage} alt="Preview" className="profile-img" />}
+            <input type="file" accept="image/*" onChange={handleImageChange} />
+          </div>
         </div>
-        <input
-          type="text"
-          placeholder="ชื่อ-นามสกุล"
-          value={realname}
-          onChange={(e) => setRealname(e.target.value)}
-          required
-        />
-        <input
-          type="text"
-          placeholder="รหัสประจำตัว"
-          value={userid}
-          onChange={(e) => setUserId(e.target.value)}
-          required
-        />
-        <input
-          type="text"
-          placeholder="กรุ๊ปเลือด"
-          value={blood}
-          onChange={(e) => setBlood(e.target.value)}
-          required
-        />
-        <input
-          type="text"
-          placeholder="เลขปืน"
-          value={gunNumber}
-          onChange={(e) => setGunNumber(e.target.value)}
-        />
-        <select
-          value={major}
-          onChange={(e) => setMajor(e.target.value)}
-          required
-        >
-          <option value="">-- เลือกสาขาวิชา --</option>
-          {majorOptions.map(opt => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
-          ))}
-        </select>
-        <select
-          value={year}
-          onChange={e => setYear(e.target.value)}
-          required
-        >
-          <option value="">-- เลือกชั้นปี --</option>
-          <option value="1">ชั้นปี 1</option>
-          <option value="2">ชั้นปี 2</option>
-          <option value="3">ชั้นปี 3</option>
-          <option value="4">ชั้นปี 4</option>
-          <option value="5">ชั้นปี 5</option>
-        </select>
-        <input
-          type="text"
-          placeholder="ชื่อชมรมที่ 1"
-          value={club1}
-          onChange={e => setClub1(e.target.value)}
-        />
-        <input
-          type="text"
-          placeholder="ชื่อชมรมที่ 2"
-          value={club2}
-          onChange={e => setClub2(e.target.value)}
-        />
-        <input
-          type="text"
-          placeholder="ชื่อชมรมที่ 3"
-          value={club3}
-          onChange={e => setClub3(e.target.value)}
-        />
+
+        <div className="section-container">
+          <h3 className="section-title">ข้อมูลพื้นฐาน</h3>
+          <div className="form-group">
+            <label className="form-label">ชื่อ-นามสกุล</label>
+            <input
+              type="text"
+              placeholder="กรอกชื่อ-นามสกุล"
+              value={realname}
+              onChange={(e) => setRealname(e.target.value)}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label">รหัสประจำตัว</label>
+            <input
+              type="text"
+              placeholder="กรอกรหัสประจำตัว"
+              value={userid}
+              onChange={(e) => setUserId(e.target.value)}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label">กรุ๊ปเลือด</label>
+            <input
+              type="text"
+              placeholder="กรอกกรุ๊ปเลือด เช่น A, B, AB, O"
+              value={blood}
+              onChange={(e) => setBlood(e.target.value)}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label">เลขปืน (ไม่บังคับ)</label>
+            <input
+              type="text"
+              placeholder="กรอกเลขปืน"
+              value={gunNumber}
+              onChange={(e) => setGunNumber(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="section-container">
+          <h3 className="section-title">ข้อมูลการศึกษา</h3>
+          <div className="form-group">
+            <label className="form-label">สาขาวิชา</label>
+            <select
+              value={major}
+              onChange={(e) => setMajor(e.target.value)}
+              required
+            >
+              <option value="">-- เลือกสาขาวิชา --</option>
+              {majorOptions.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+          <div className="form-group">
+            <label className="form-label">ชั้นปี</label>
+            <select
+              value={year}
+              onChange={e => setYear(e.target.value)}
+              required
+            >
+              <option value="">-- เลือกชั้นปี --</option>
+              <option value="1">ชั้นปี 1</option>
+              <option value="2">ชั้นปี 2</option>
+              <option value="3">ชั้นปี 3</option>
+              <option value="4">ชั้นปี 4</option>
+              <option value="5">ชั้นปี 5</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="section-container">
+          <h3 className="section-title">ข้อมูลชมรม (ไม่บังคับ)</h3>
+          <div className="form-group">
+            <label className="form-label">ชมรมที่ 1</label>
+            <input
+              type="text"
+              placeholder="กรอกชื่อชมรมที่ 1"
+              value={club1}
+              onChange={e => setClub1(e.target.value)}
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label">ชมรมที่ 2</label>
+            <input
+              type="text"
+              placeholder="กรอกชื่อชมรมที่ 2"
+              value={club2}
+              onChange={e => setClub2(e.target.value)}
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label">ชมรมที่ 3</label>
+            <input
+              type="text"
+              placeholder="กรอกชื่อชมรมที่ 3"
+              value={club3}
+              onChange={e => setClub3(e.target.value)}
+            />
+          </div>
+        </div>
 
         {/* ส่วนเพิ่มรายการจำหน่าย */}
-        <div style={{ margin: '16px 0' }}>
-          <b>รายการจำหน่าย (เพิ่มได้หลายรายการ):</b>
+        <div className="sale-container">
+          <h3 className="section-title">รายการจำหน่าย (ไม่บังคับ)</h3>
+          <p className="sale-description">เพิ่มรายการที่ต้องการจำหน่าย เช่น อุปกรณ์การเรียน เครื่องแบบ หรืออื่นๆ</p>
           {otherFields.map((f, idx) => (
             <div
               key={idx}
-              style={{
-                display: 'flex',
-                gap: 8,
-                marginBottom: 4,
-                alignItems: 'center',
-                width: '100%',
-              }}
+              className="sale-input-row"
             >
               <input
                 placeholder="ชื่อรายการ"
@@ -257,8 +311,31 @@ export default function EditProfile() {
             }}
           >+ เพิ่มรายการจำหน่าย</button>
         </div>
-        <button type="submit">บันทึก</button>
+        <button type="submit" className="save-button">บันทึกข้อมูล</button>
       </form>
+
+      {/* Custom Popup */}
+      {showPopup && (
+        <div className="success-popup-backdrop">
+          <div className="success-popup">
+            <div className="success-icon">
+              {popupType === 'success' ? '✅' : '❌'}
+            </div>
+            <h3 className="success-title">
+              {popupType === 'success' ? 'สำเร็จ!' : 'เกิดข้อผิดพลาด!'}
+            </h3>
+            <p className="success-message">
+              {popupMessage}
+            </p>
+            <button
+              onClick={closePopup}
+              className="success-close-btn"
+            >
+              ตกลง
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

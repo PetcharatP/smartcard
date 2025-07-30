@@ -1,14 +1,15 @@
 .view-profile-bg {
   background: #e0e5ec;
-  min-height: 10vh;
-  padding: 400px 0;
-  padding-top: 400px;
+  min-height: 100vh;
+  padding: 2rem;
+  padding-top: 80px;
   display: flex;
   justify-content: center;
+  align-items: flex-start;
 }
 
 .view-profile-container {
-  max-width: 420px;
+  max-width: 800px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -88,7 +89,7 @@
   border: none;
   margin-bottom: 12px;
   min-width: 330px;
-  max-width: 260px;
+  max-width: 600px;
 }
 
 .view-profile-card-title {
@@ -181,7 +182,7 @@
   }
   .view-profile-container {
     max-width: 100vw;
-    padding: 0 0 16px 0;
+    padding: 16px;
     border-radius: 0;
     box-shadow: none;
   }
@@ -190,9 +191,9 @@
     gap: 12px;
   }
   .view-profile-card {
-    padding: 0.75rem;
-    border-radius: 0.25rem;
-    box-shadow: none;
+    padding: 1rem;
+    border-radius: 12px;
+    box-shadow: 6px 6px 16px #c2c8d0, -6px -6px 16px #f0f5fa;
   }
   .btn {
     font-size: 1em;
@@ -230,4 +231,22 @@
     align-self: stretch;
     border-right: none;
   }
+}
+
+/* Additional classes for inline style replacement */
+.view-profile-clubs-list {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.view-profile-no-club {
+  color: #aaa;
+}
+
+.view-profile-no-data {
+  color: #aaa;
+}
+
+.view-profile-qr-title {
+  margin: 12px 0;
 }

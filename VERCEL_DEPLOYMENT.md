@@ -1,126 +1,93 @@
-# Vercel Deployment Guide
+# Vercel Deployment Configuration
 
-## Prerequisites
+## การตั้งค่า Vercel Proxy
 
-1. **Vercel Account**: Sign up at [vercel.com](https://vercel.com)
-2. **GitHub Repository**: Your code should be in a GitHub repository
-3. **Backend API**: Make sure your backend is running and accessible
+### 1. vercel.json Configuration
+```json
+{
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "http://103.91.205.153:3000/api/$1"
+    }
+  ]
+}
+```
 
-## Deployment Steps
+### 2. Environment Variables
+ใน Vercel Dashboard ตั้งค่า:
+```
+NODE_ENV=production
+```
 
-### Method 1: Vercel CLI (Recommended)
+### 3. API URL Logic
+```javascript
+// ใน component ต่างๆ
+const apiUrl = process.env.NODE_ENV === 'production' ? '' : (import.meta.env.VITE_API_URL || '');
+```
 
-1. **Install Vercel CLI**:
+## วิธีการ Deploy
+
+### 1. Build Project
 ```bash
-npm install -g vercel
-```
-
-2. **Login to Vercel**:
-```bash
-vercel login
-```
-
-3. **Deploy from frontend directory**:
-```bash
-cd /root/my-fullstack-app/frontend
-vercel
-```
-
-4. **Follow the prompts**:
-- Link to existing project? `N`
-- What's your project's name? `my-fullstack-app-frontend`
-- In which directory is your code located? `./`
-- Auto-detected Project Settings (Vite): `Y`
-
-### Method 2: GitHub Integration
-
-1. **Push to GitHub**:
-```bash
-cd /root/my-fullstack-app
-git init
-git add .
-git commit -m "Initial commit"
-git branch -M main
-git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO.git
-git push -u origin main
-```
-
-2. **Connect to Vercel**:
-- Go to [vercel.com/dashboard](https://vercel.com/dashboard)
-- Click "Import Project"
-- Connect your GitHub repository
-- Select the frontend folder as root directory
-
-## Environment Variables
-
-Configure these in Vercel Dashboard → Project → Settings → Environment Variables:
-
-```
-VITE_API_URL=http://103.91.205.153:3000
-```
-
-## Build Settings
-
-Vercel should auto-detect these settings:
-- **Framework Preset**: Vite
-- **Build Command**: `npm run build`
-- **Output Directory**: `dist`
-- **Install Command**: `npm install`
-
-## Custom Domains (Optional)
-
-1. In Vercel Dashboard → Project → Settings → Domains
-2. Add your custom domain
-3. Update DNS records as instructed
-
-## Production Checklist
-
-- ✅ Environment variables configured
-- ✅ Backend API accessible and CORS enabled
-- ✅ Build succeeds locally (`npm run build`)
-- ✅ Preview works (`npm run serve`)
-
-## Useful Commands
-
-```bash
-# Test build locally
 npm run build
-npm run serve
+```
 
-# Deploy to preview
-vercel
+### 2. Deploy to Vercel
+```bash
+# ติดตั้ง Vercel CLI (ถ้ายังไม่มี)
+npm i -g vercel
 
-# Deploy to production
+# Deploy
 vercel --prod
+```
 
-# Check deployment logs
-vercel logs [deployment-url]
+### 3. หรือใช้ Git Integration
+1. Push code ไป GitHub
+2. Connect repository ใน Vercel Dashboard
+3. Vercel จะ auto-deploy เมื่อ push
+
+## การทำงาน
+
+### Development Mode
+- Frontend: `http://localhost:5173` หรือ `http://103.91.205.153:5173`
+- API calls: ไปที่ `http://103.91.205.153:3000/api/*` (direct)
+
+### Production Mode (Vercel)
+- Frontend: `https://your-app.vercel.app`
+- API calls: `/api/*` → Vercel proxy → `http://103.91.205.153:3000/api/*`
+
+## ข้อดี
+
+1. **CORS Problem Solved**: ไม่มีปัญหา CORS เพราะ same-origin
+2. **Security**: ซ่อน backend URL จาก client
+3. **Performance**: Vercel Edge Network caching
+4. **Reliability**: Vercel handles SSL/TLS และ CDN
+
+## การทดสอบ
+
+### หลัง Deploy แล้ว
+```bash
+# ทดสอบ API ผ่าน Vercel
+curl https://your-app.vercel.app/api/health-check
+
+# ทดสอบ login
+curl -X POST https://your-app.vercel.app/api/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"test","password":"test"}'
 ```
 
 ## Troubleshooting
 
-### Build Errors
-- Check package.json dependencies
-- Ensure all imports are correct
-- Verify environment variables
+### 1. ถ้า API ไม่ทำงาน
+- ตรวจสอบ backend server ยังทำงานอยู่หรือไม่
+- ตรวจสอบ firewall port 3000
+- ดู Vercel Function Logs
 
-### API Connection Issues
-- Verify VITE_API_URL in environment variables
-- Check CORS settings on backend
-- Ensure backend is accessible from internet
+### 2. ถ้า CORS Error
+- ตรวจสอบ vercel.json syntax
+- Redeploy Vercel
 
-### Routing Issues
-- Verify vercel.json configuration
-- Check React Router setup
-
-## Automatic Deployments
-
-Once connected to GitHub:
-- Push to main branch → automatic production deployment
-- Push to other branches → automatic preview deployments
-
-## Domain Example
-
-After deployment, your app will be available at:
-- `https://my-fullstack-app-frontend.vercel.app`
-- Or your custom domain
+### 3. Environment Variables
+- ตรวจสอบใน Vercel Dashboard
+- Redeploy หลังเปลี่ยน env vars
