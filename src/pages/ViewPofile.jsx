@@ -18,6 +18,13 @@ export default function ViewProfile() {
     const [club1, setClub1] = useState('');
     const [club2, setClub2] = useState('');
     const [club3, setClub3] = useState('');
+    
+    // เพิ่ม state สำหรับสังกัด
+    const [battalion, setBattalion] = useState('');
+    const [company, setCompany] = useState('');
+    const [platoon, setPlatoon] = useState('');
+    const [squad, setSquad] = useState('');
+    
     const apiUrl = process.env.NODE_ENV === 'production' ? '' : (import.meta.env.VITE_API_URL || '');
     const navigate = useNavigate();
     const majorOptions = [
@@ -54,6 +61,13 @@ export default function ViewProfile() {
                     setClub1(data.data.club1 || '');
                     setClub2(data.data.club2 || '');
                     setClub3(data.data.club3 || '');
+                    
+                    // โหลดข้อมูลสังกัด
+                    setBattalion(data.data.battalion || '');
+                    setCompany(data.data.company || '');
+                    setPlatoon(data.data.platoon || '');
+                    setSquad(data.data.squad || '');
+                    
                     if (data.data.profileImage) {
                         setProfileImage(`data:image/jpeg;base64,${data.data.profileImage}`);
                     }
@@ -135,6 +149,22 @@ return (
                             {club3 && <li>{club3}</li>}
                             {!club1 && !club2 && !club3 && <li className="view-profile-no-club">-</li>}
                         </ul>
+                    </div>
+                    <div className="view-profile-row">
+                        <span>สังกัด: </span>
+                        {(battalion || company || squad || platoon) ? (
+                            <span>
+                                {battalion && `กองพัน ${battalion}`}
+                                {battalion && company && ' '}
+                                {company && `กองร้อย ${company}`}
+                                {(battalion || company) && squad && ' '}
+                                {squad && `หมวด ${squad}`}
+                                {(battalion || company || squad) && platoon && ' '}
+                                {platoon && `หมู่ ${platoon}`}
+                            </span>
+                        ) : (
+                            <span>-</span>
+                        )}
                     </div>
                     <div className="view-profile-card-subtitle">ประวัติการปรับคะแนน</div>
                     <div className="view-profile-history">

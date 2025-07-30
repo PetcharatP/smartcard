@@ -12,6 +12,10 @@ export default function Summary() {
   const [userSummaries, setUserSummaries] = useState([]);
   const [userRealname, setUserRealname] = useState('');
   const [userYear, setUserYear] = useState('');
+  const [userBattalion, setUserBattalion] = useState('');
+  const [userCompany, setUserCompany] = useState('');
+  const [userPlatoon, setUserPlatoon] = useState('');
+  const [userSquad, setUserSquad] = useState('');
 
   // สำหรับ admin/เจ้าหน้าที่
   const [form, setForm] = useState({
@@ -52,9 +56,33 @@ export default function Summary() {
       .then(res => res.json())
       .then(data => {
         setSummaries(data.data || []);
-        setUserSummaries(data.data || []);
+        // ยังไม่กรอง userSummaries ตอนนี้ เดี๋ยวจะกรองใน useEffect อีกอันหลังจากได้ข้อมูล user
       });
   }, []);
+
+  // กรองใบยอดตามสังกัดของ user เมื่อมีข้อมูล battalion และ company
+  useEffect(() => {
+    console.log('User สังกัด:', { userBattalion, userCompany });
+    console.log('Summaries:', summaries);
+    
+    if (userBattalion && userCompany && summaries.length > 0) {
+      const filteredSummaries = summaries.filter(summary => {
+        console.log('Comparing:', {
+          summaryBattalion: summary.battalion,
+          userBattalion: userBattalion,
+          summaryCompany: summary.company,
+          userCompany: userCompany,
+          match: Number(summary.battalion) === Number(userBattalion) && Number(summary.company) === Number(userCompany)
+        });
+        return Number(summary.battalion) === Number(userBattalion) && Number(summary.company) === Number(userCompany);
+      });
+      console.log('Filtered summaries:', filteredSummaries);
+      setUserSummaries(filteredSummaries);
+    } else {
+      // ถ้าไม่มีข้อมูลสังกัด แสดงทั้งหมด
+      setUserSummaries(summaries);
+    }
+  }, [userBattalion, userCompany, summaries]);
 
   // ดึง other จาก user (authme)
   useEffect(() => {
@@ -67,6 +95,10 @@ export default function Summary() {
         if (data.data) {
           setUserRealname(data.data.realname || '');
           setUserYear(data.data.year || '');
+          setUserBattalion(data.data.battalion || '');
+          setUserCompany(data.data.company || '');
+          setUserPlatoon(data.data.platoon || '');
+          setUserSquad(data.data.squad || '');
         }
         if (data.data && data.data.other) {
           try {
@@ -97,6 +129,35 @@ export default function Summary() {
 
   const handleUserSummarySelect = e => {
     setUserSummarySelect(e.target.value);
+  };
+
+  const handleSaveUnitInfo = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/user/update-unit', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          battalion: userBattalion,
+          company: userCompany,
+          platoon: userPlatoon,
+          squad: userSquad
+        })
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        showMessage('บันทึกข้อมูลสังกัดเรียบร้อยแล้ว', 'success');
+      } else {
+        showMessage('ไม่สามารถบันทึกข้อมูลได้: ' + (result.message || 'เกิดข้อผิดพลาด'), 'error');
+      }
+    } catch (error) {
+      console.error('Error saving unit info:', error);
+      showMessage('เกิดข้อผิดพลาดในการบันทึกข้อมูล', 'error');
+    }
   };
 
   // handle ส่งยอดจำหน่าย (เฉพาะที่ติ๊ก)
@@ -182,7 +243,15 @@ export default function Summary() {
           .then(res => res.json())
           .then(data => {
             setSummaries(data.data || []);
-            setUserSummaries(data.data || []);
+            // กรองใบยอดตามสังกัดของ user
+            if (userBattalion && userCompany) {
+              const filteredSummaries = (data.data || []).filter(summary => 
+                Number(summary.battalion) === Number(userBattalion) && Number(summary.company) === Number(userCompany)
+              );
+              setUserSummaries(filteredSummaries);
+            } else {
+              setUserSummaries(data.data || []);
+            }
           });
         setShowUserForm(false);
       } else {
@@ -440,58 +509,74 @@ export default function Summary() {
         {/* ----------- ตารางสถานะการส่งยอดจำหน่ายของผู้ใช้ ----------- */}
         <div className="summary-card">
           <h4 className="summary-section-title">สถานะการส่งยอดจำหน่ายของคุณ</h4>
+          {userBattalion && userCompany ? (
+            <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '12px' }}>
+              📍 แสดงเฉพาะใบยอดของ กองพัน {userBattalion} กองร้อย {userCompany}
+            </p>
+          ) : (
+            <p style={{ color: '#ff9800', fontSize: '0.9rem', marginBottom: '12px' }}>
+              ⚠️ กรุณากรอกข้อมูลสังกัด (กองพัน/กองร้อย) เพื่อแสดงใบยอดที่เกี่ยวข้อง
+            </p>
+          )}
           <div className="table-wrapper">
             <table className="summary-table">
               <thead>
                 <tr>
                   <th>วันที่</th>
                   <th>เวลา</th>
-                  <th>กองพัน</th>
-                  <th>กองร้อย</th>
                   <th>สถานะ</th>
                   <th>รายการที่ส่ง</th>
                 </tr>
               </thead>
           <tbody>
-            {userSummaries.map(s => {
-              let sent = false;
-              let sentList = [];
-              try {
-                const other = s.other ? JSON.parse(s.other) : {};
-                const userNameWithYear = userRealname && userYear ? `${userRealname}(${userYear})` : userRealname || '';
-                Object.entries(other).forEach(([key, v]) => {
-                  if (Array.isArray(v.names) && v.names.includes(userNameWithYear)) {
-                    sent = true;
-                    sentList.push(key);
+            {userSummaries.length === 0 ? (
+              <tr>
+                <td colSpan={4} style={{ textAlign: 'center', color: '#666', padding: '20px' }}>
+                  {userBattalion && userCompany 
+                    ? `ไม่มีใบยอดสำหรับ กองพัน ${userBattalion} กองร้อย ${userCompany}`
+                    : 'ไม่มีข้อมูลใบยอด กรุณากรอกข้อมูลสังกัดด้านล่าง'
                   }
-                });
-              } catch {}
-              return (
-                <tr key={s.id}>
-                  <td>{s.date}</td>
-                  <td>{s.time}</td>
-                  <td>{s.battalion}</td>
-                  <td>{s.company}</td>
-                  <td>
-                    {sent ? (
-                      <span className="status-sent">ส่งจำหน่ายแล้ว</span>
-                    ) : (
-                      <span className="status-not-sent">ยังไม่ได้ส่ง</span>
-                    )}
-                  </td>
-                  <td>
-                    {sentList.length > 0
-                      ? sentList.map((item, idx) => (
-                          <span key={item}>
-                            {item}
-                            {idx < sentList.length - 1 ? ', ' : ''}
-                          </span>
-                        ))
-                      : '-'}
-                  </td>
-                </tr>
-              );
-            })}
+                </td>
+              </tr>
+            ) : (
+              userSummaries.map(s => {
+                let sent = false;
+                let sentList = [];
+                try {
+                  const other = s.other ? JSON.parse(s.other) : {};
+                  const userNameWithYear = userRealname && userYear ? `${userRealname}(${userYear})` : userRealname || '';
+                  Object.entries(other).forEach(([key, v]) => {
+                    if (Array.isArray(v.names) && v.names.includes(userNameWithYear)) {
+                      sent = true;
+                      sentList.push(key);
+                    }
+                  });
+                } catch {}
+                return (
+                  <tr key={s.id}>
+                    <td>{s.date}</td>
+                    <td>{s.time}</td>
+                    <td>
+                      {sent ? (
+                        <span className="status-sent">ส่งจำหน่ายแล้ว</span>
+                      ) : (
+                        <span className="status-not-sent">ยังไม่ได้ส่ง</span>
+                      )}
+                    </td>
+                    <td>
+                      {sentList.length > 0
+                        ? sentList.map((item, idx) => (
+                            <span key={item}>
+                              {item}
+                              {idx < sentList.length - 1 ? ', ' : ''}
+                            </span>
+                          ))
+                        : '-'}
+                    </td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
         </div>
@@ -499,6 +584,7 @@ export default function Summary() {
       {/* ----------- ส่วนของผู้ใช้ (User) ----------- */}
       <div style={{ marginBottom: 32, border: '2px solid #007bff', borderRadius: 8, padding: 16, background: '#f8faff' }}>
         <h3 style={{ color: '#007bff' }}>ส่งยอดจำหน่าย (สำหรับผู้ใช้ทั่วไป)</h3>
+
         {!showUserForm ? (
           <button
             className="btn btn-primary"
@@ -515,7 +601,7 @@ export default function Summary() {
                 <option value="">-- เลือกใบยอด --</option>
                 {userSummaries.map(s => (
                   <option key={s.id} value={s.id}>
-                    {s.date} | {s.time} | กองพัน {s.battalion} กองร้อย {s.company}
+                    {s.date} | {s.time}
                   </option>
                 ))}
               </select>

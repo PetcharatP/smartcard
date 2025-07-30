@@ -27,6 +27,13 @@ export default function EditProfile() {
   const [club3, setClub3] = useState('');
   const [year, setYear] = useState('');
   const [otherFields, setOtherFields] = useState([{ key: '', value: 1 }]);
+  
+  // เพิ่ม state สำหรับสังกัด
+  const [battalion, setBattalion] = useState('');
+  const [company, setCompany] = useState('');
+  const [platoon, setPlatoon] = useState('');
+  const [squad, setSquad] = useState('');
+  
   const [showPopup, setShowPopup] = useState(false);
   const [popupMessage, setPopupMessage] = useState('');
   const [popupType, setPopupType] = useState('success'); // 'success' or 'error'
@@ -55,6 +62,13 @@ export default function EditProfile() {
           setClub2(data.data.club2 || '');
           setClub3(data.data.club3 || '');
           setYear(data.data.year || '');
+          
+          // โหลดข้อมูลสังกัด
+          setBattalion(data.data.battalion || '');
+          setCompany(data.data.company || '');
+          setPlatoon(data.data.platoon || '');
+          setSquad(data.data.squad || '');
+          
           if (data.data.profileImage) {
             setPreviewImage(`data:image/jpeg;base64,${data.data.profileImage}`);
           }
@@ -124,6 +138,13 @@ export default function EditProfile() {
     formData.append('club3', club3);
     formData.append('year', year);
     formData.append('other', JSON.stringify(otherFields));
+    
+    // เพิ่มข้อมูลสังกัด
+    formData.append('battalion', battalion);
+    formData.append('company', company);
+    formData.append('platoon', platoon);
+    formData.append('squad', squad);
+    
     if (profileImage) formData.append('profileImage', profileImage);
 
     fetch(`/api/user/update`, {
@@ -229,6 +250,60 @@ export default function EditProfile() {
               <option value="3">ชั้นปี 3</option>
               <option value="4">ชั้นปี 4</option>
               <option value="5">ชั้นปี 5</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="section-container">
+          <h3 className="section-title">ข้อมูลสังกัด (ไม่บังคับ)</h3>
+          <div className="form-group">
+            <label className="form-label">กองพัน</label>
+            <select
+              value={battalion}
+              onChange={e => setBattalion(e.target.value)}
+            >
+              <option value="">-- เลือกกองพัน --</option>
+              <option value="1">กองพัน 1</option>
+              <option value="2">กองพัน 2</option>
+              <option value="3">กองพัน 3</option>
+              <option value="4">กองพัน 4</option>
+            </select>
+          </div>
+          <div className="form-group">
+            <label className="form-label">กองร้อย</label>
+            <select
+              value={company}
+              onChange={e => setCompany(e.target.value)}
+            >
+              <option value="">-- เลือกกองร้อย --</option>
+              <option value="1">กองร้อย 1</option>
+              <option value="2">กองร้อย 2</option>
+              <option value="3">กองร้อย 3</option>
+            </select>
+          </div>
+          <div className="form-group">
+            <label className="form-label">หมู่</label>
+            <select
+              value={platoon}
+              onChange={e => setPlatoon(e.target.value)}
+            >
+              <option value="">-- เลือกหมู่ --</option>
+              <option value="1">หมู่ 1</option>
+              <option value="2">หมู่ 2</option>
+              <option value="3">หมู่ 3</option>
+              <option value="4">หมู่ 4</option>
+            </select>
+          </div>
+          <div className="form-group">
+            <label className="form-label">หมวด</label>
+            <select
+              value={squad}
+              onChange={e => setSquad(e.target.value)}
+            >
+              <option value="">-- เลือกหมวด --</option>
+              <option value="1">หมวด 1</option>
+              <option value="2">หมวด 2</option>
+              <option value="3">หมวด 3</option>
             </select>
           </div>
         </div>
