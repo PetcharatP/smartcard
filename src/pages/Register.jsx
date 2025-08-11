@@ -8,6 +8,7 @@ export default function Register() {
   const [userid, setUserid] = useState('');
   const [password, setPassword] = useState('');
   const [blood, setBlood] = useState('');
+  const [role, setRole] = useState('student'); // เพิ่ม role เริ่มต้นเป็น student
   const [error, setError] = useState('');
   const [fadeIn, setFadeIn] = useState(false);
   const navigate = useNavigate();
@@ -29,7 +30,8 @@ export default function Register() {
           realname,
           userid,
           password,
-          blood
+          blood,
+          role // เพิ่ม role ในการส่งข้อมูล
         }),
       });
       const data = await res.json();
@@ -94,6 +96,14 @@ export default function Register() {
           <option value="O">O</option>
           <option value="AB">AB</option>
         </select>
+        
+        {/* Hidden field สำหรับ role */}
+        <input
+          type="hidden"
+          name="role"
+          value={role}
+        />
+        
         {error && <div className="register-error">{error}</div>}
         <button 
           type="submit" 

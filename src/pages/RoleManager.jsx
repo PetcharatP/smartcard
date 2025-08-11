@@ -269,7 +269,7 @@ const RoleManager = () => {
                 </div>
               ) : (
                 users.map((userData) => (
-                  <div key={`user-${userData.id}-${userData.username}`} className="user-card">{/* ป้องกัน duplicate key */}
+                  <div key={userData.id} className="user-card">
                     <div className="user-card-header">
                       <div className="user-avatar">
                         {userData.realname?.charAt(0) || '?'}

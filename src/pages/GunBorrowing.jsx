@@ -1,27 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Html5QrcodeScanner, Html5QrcodeScanType } from 'html5-qrcode';
-import { hasPermission, PERMISSIONS } from '../utils/permissions';
-import { useFastAuth } from '../hooks/useFastAuth';
 import './GunBorrowing.css';
 
 export default function GunBorrowing() {
     const apiUrl = process.env.NODE_ENV === 'production' ? '' : (import.meta.env.VITE_API_URL || '');
-    const { user } = useFastAuth();
-    
-    // Check permissions
-    const canEdit = hasPermission(user, PERMISSIONS.EDIT_WEAPON_STORAGE);
-    
-    // Debug: แสดงข้อมูล user และ permissions
-    useEffect(() => {
-        console.log('=== GunBorrowing Debug ===');
-        console.log('User:', user);
-        console.log('User Role:', user?.role);
-        console.log('Is Admin:', user?.admin);
-        console.log('Can Edit Weapon Storage:', canEdit);
-        console.log('EDIT_WEAPON_STORAGE permission:', PERMISSIONS.EDIT_WEAPON_STORAGE);
-        console.log('========================');
-    }, [user, canEdit]);
-    
     // State
     const [userQRCode, setUserQRCode] = useState('');
     const [gunQRCode, setGunQRCode] = useState('');
@@ -123,12 +105,6 @@ export default function GunBorrowing() {
 
     // Auto-save function - บันทึกทันทีเมื่อสแกนสำเร็จ
     const autoSave = async (userQRCode, gunQRCode, realname, action) => {
-        // ตรวจสอบสิทธิ์ก่อนทำการเบิก/คืน
-        if (!canEdit) {
-            setStatusMessage(`❌ คุณไม่มีสิทธิ์ในการ${action === 'borrow' ? 'เบิก' : 'คืน'}อาวุธ - เฉพาะดูข้อมูลเท่านั้น`);
-            return false;
-        }
-        
         const result = await apiCall(`/api/gun-borrowing-record`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -175,18 +151,9 @@ export default function GunBorrowing() {
 
     const fetchPublicGuns = async () => {
         try {
-            const token = localStorage.getItem('token');
-            const res = await fetch(`/api/public-gun`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
+            const res = await fetch(`/api/public-gun`);
             const data = await res.json();
-            if (data.success !== false) {
-                setPublicGuns(data);
-            } else {
-                setPublicGunStatus(data.message || 'ไม่สามารถโหลดข้อมูลปืนสาธารณะ');
-            }
+            setPublicGuns(data);
         } catch {
             setPublicGunStatus('ไม่สามารถโหลดข้อมูลปืนสาธารณะ');
         }
@@ -195,12 +162,7 @@ export default function GunBorrowing() {
     // Fetch today's records from database
     const fetchTodayRecords = async () => {
         try {
-            const token = localStorage.getItem('token');
-            const res = await fetch(`/api/gun-borrowing-record?date=${currentDate}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
+            const res = await fetch(`/api/gun-borrowing-record?date=${currentDate}`);
             const data = await res.json();
             if (data.success) {
                 setSavedRecords(data.data);
@@ -213,13 +175,9 @@ export default function GunBorrowing() {
     // Save borrow record to database
     const saveBorrowRecord = async (userQRCode, gunQRCode, realname) => {
         try {
-            const token = localStorage.getItem('token');
             const res = await fetch(`/api/gun-borrowing-record`, {
                 method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     userQRCode,
                     gunQRCode,
@@ -240,13 +198,9 @@ export default function GunBorrowing() {
     // Save return record to database
     const saveReturnRecord = async (userQRCode, gunQRCode, realname) => {
         try {
-            const token = localStorage.getItem('token');
             const res = await fetch(`/api/gun-borrowing-record`, {
                 method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     userQRCode,
                     gunQRCode,
@@ -267,12 +221,7 @@ export default function GunBorrowing() {
     // Load records from specific date
     const loadRecordsFromDate = async (selectedDate) => {
         try {
-            const token = localStorage.getItem('token');
-            const res = await fetch(`/api/gun-borrowing-record?date=${selectedDate}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
+            const res = await fetch(`/api/gun-borrowing-record?date=${selectedDate}`);
             const data = await res.json();
             if (data.success) {
                 setSavedRecords(data.data);
@@ -337,13 +286,6 @@ export default function GunBorrowing() {
     const handleAddPublicGun = async (e) => {
         e.preventDefault();
         if (!newPublicGun) return;
-        
-        // ตรวจสอบสิทธิ์
-        if (!canEdit) {
-            setPublicGunStatus('❌ คุณไม่มีสิทธิ์เพิ่มปืน - เฉพาะดูข้อมูลเท่านั้น');
-            return;
-        }
-        
         try {
             const res = await fetch(`/api/public-gun`, {
                 method: 'POST',
@@ -364,12 +306,6 @@ export default function GunBorrowing() {
 
     // Delete public gun
     const handleDeletePublicGun = async (gunQRCode) => {
-        // ตรวจสอบสิทธิ์
-        if (!canEdit) {
-            setPublicGunStatus('❌ คุณไม่มีสิทธิ์ลบปืน - เฉพาะดูข้อมูลเท่านั้น');
-            return;
-        }
-        
         if (!window.confirm(`ลบปืน ${gunQRCode} ?`)) return;
         try {
             const res = await fetch(`/api/public-gun`, {
@@ -712,30 +648,12 @@ export default function GunBorrowing() {
             <div className="gun-borrowing-container">
                 <h1 className="gun-borrowing-title">ระบบยืม-คืนปืน</h1>
                 
-                {/* แสดงข้อมูล Role และ Permissions สำหรับ Debug */}
-                <div style={{
-                    background: '#f0f9ff',
-                    border: '1px solid #0284c7',
-                    borderRadius: '8px',
-                    padding: '12px',
-                    margin: '16px 0',
-                    fontSize: '14px'
-                }}>
-                    <div><strong>ผู้ใช้:</strong> {user?.realname || user?.username || 'ไม่ระบุ'}</div>
-                    <div><strong>Role:</strong> {user?.role || 'ไม่ระบุ'}</div>
-                    <div><strong>Admin:</strong> {user?.admin ? 'ใช่' : 'ไม่ใช่'}</div>
-                    <div><strong>สิทธิ์แก้ไขคลังอาวุธ:</strong> <span style={{color: canEdit ? '#059669' : '#dc2626'}}>{canEdit ? '✅ มีสิทธิ์' : '❌ ไม่มีสิทธิ์'}</span></div>
-                </div>
-                
                 <div className="gun-borrowing-card">
-                    {/* แสดง Scanner เฉพาะผู้ที่มีสิทธิ์แก้ไข */}
-                    {canEdit ? (
-                        <div className="edit-mode">
-                            {/* สแกน QR Code แบบรวม - สแกนได้ทั้ง User และ Gun */}
-                            <div className="qr-section">
-                                <label className="qr-label">
-                                    สแกน QR Code (User หรือ Gun)
-                                </label>
+                    {/* สแกน QR Code แบบรวม - สแกนได้ทั้ง User และ Gun */}
+                    <div className="qr-section">
+                        <label className="qr-label">
+                            สแกน QR Code (User หรือ Gun)
+                        </label>
                         <div id="qr-reader" className="qr-reader"></div>
                         <button 
                             onClick={() => startScanner()}
@@ -974,27 +892,11 @@ export default function GunBorrowing() {
                         </div>
                     )}
                 </div>
-                    ) : (
-                        /* แสดงข้อความสำหรับ View Only */
-                        <div style={{
-                            padding: '20px',
-                            textAlign: 'center',
-                            background: '#f8fafc',
-                            border: '2px dashed #cbd5e1',
-                            borderRadius: '8px',
-                            color: '#64748b',
-                            margin: '16px 0'
-                        }}>
-                            <h3 style={{ margin: '0 0 8px 0', color: '#475569' }}>📖 โหมดดูข้อมูลเท่านั้น</h3>
-                            <p style={{ margin: 0, fontSize: '14px' }}>คุณสามารถดูข้อมูลการเบิก-คืนปืนได้ แต่ไม่สามารถทำการเบิก/คืนหรือเพิ่มปืนใหม่ได้</p>
-                        </div>
-                    )}
 
                 {/* --- ส่วนจัดการปืนสาธารณะ --- */}
                 <div className="public-gun-section">
                     <h2 className="public-gun-title">ปืนสาธารณะ (Public Gun)</h2>
                     
-                    {canEdit && (
                     <button
                         type="button"
                         className="gun-borrowing-print-btn"
@@ -1003,9 +905,8 @@ export default function GunBorrowing() {
                     >
                         {showAddPublicGunForm ? "ปิดฟอร์มเพิ่มปืน" : "เพิ่มปืนสาธารณะ"}
                     </button>
-                    )}
 
-                    {canEdit && showAddPublicGunForm && (
+                    {showAddPublicGunForm && (
                         <form onSubmit={handleAddPublicGun} className="public-gun-form">
                             <input
                                 type="text"
@@ -1041,7 +942,6 @@ export default function GunBorrowing() {
                                         <tr key={gun.gunQRCode}>
                                             <td>{gun.gunQRCode}</td>
                                             <td>
-                                                {canEdit && (
                                                 <button
                                                     type="button"
                                                     style={{
@@ -1056,7 +956,6 @@ export default function GunBorrowing() {
                                                 >
                                                     ลบ
                                                 </button>
-                                                )}
                                             </td>
                                         </tr>
                                     ))
@@ -1222,7 +1121,6 @@ export default function GunBorrowing() {
                 )}
             </div>
             </div>
-        </div>
         </div>
     );
 }

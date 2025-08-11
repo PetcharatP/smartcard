@@ -13,7 +13,6 @@ import GunBorrowing from './pages/GunBorrowing.jsx';
 import Navbar from './components/Navbar';
 import Summary from './pages/Summary.jsx';
 import RoleManager from './pages/RoleManager.jsx';
-import PermissionTestPage from './pages/PermissionTestPage.jsx';
 import { withPermission } from './components/PermissionWrapper';
 
 // ห่อ components ด้วย permission wrapper
@@ -58,11 +57,6 @@ function AppContent() {
         <Route path="/gun-borrowing" element={<ProtectedGunBorrowing />} />
         <Route path="/summary" element={<ProtectedSummary />} />
         <Route path="/role-manager" element={<ProtectedRoleManager />} />
-        <Route path="/permission-test" element={
-          <ProtectedRoute>
-            <PermissionTestPage />
-          </ProtectedRoute>
-        } />
         <Route path="*" element={<h1>404 Not Found</h1>} />
       </Routes>
     </>

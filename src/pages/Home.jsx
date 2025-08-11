@@ -1,8 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useFastAuth } from '../hooks/useFastAuth';
-import { hasPermission, PERMISSIONS, ROLES } from '../utils/permissions';
 import './Home.css';
 
 // --- EditPostForm Component ---
@@ -1007,7 +1005,9 @@ function NewPostForm({
 
 // --- Main Home Component ---
 export default function Home() {
-  const { user, isLoading, loadProfileImage, profileImage } = useFastAuth(); // เพิ่ม loadProfileImage และ profileImage
+  const [realname, setRealname] = useState('');
+  const [userid, setUserId] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [imageFiles, setImageFiles] = useState([]);
@@ -1025,32 +1025,6 @@ export default function Home() {
   const [likingPosts, setLikingPosts] = useState(new Set()); // เก็บ ID ของโพสต์ที่กำลังไลค์
   const navigate = useNavigate();
 
-  // Helper functions สำหรับ role
-  const getRoleText = (role) => {
-    switch (role) {
-      case ROLES.STUDENT: return '🎓 นักเรียน';
-      case ROLES.TEACHER: return '👨‍🏫 อาจารย์';
-      case ROLES.OFFICER: return '🎖️ นายทหาร';
-      case ROLES.ADMIN: return '👑 ผู้ดูแลระบบ';
-      default: return '✨ สมาชิก';
-    }
-  };
-
-  const getRoleColor = (role) => {
-    switch (role) {
-      case ROLES.STUDENT: return '#3b82f6';
-      case ROLES.TEACHER: return '#10b981';
-      case ROLES.OFFICER: return '#f59e0b';
-      case ROLES.ADMIN: return '#ef4444';
-      default: return '#6b7280';
-    }
-  };
-
-  // ใช้ user จาก useFastAuth
-  const realname = user && user.realname ? user.realname : 'ผู้ใช้';
-  const userid = user && (user.userid || user.username) ? (user.userid || user.username) : '';
-  const isAdmin = user && (user.admin || user.role === ROLES.ADMIN);
-
   const showMessage = (message, type = 'success') => {
     setPopupMessage(message);
     setPopupType(type);
@@ -1061,94 +1035,72 @@ export default function Home() {
     setShowPopup(false);
   };
 
-  const fetchPosts = useCallback(async () => {
-    try {
-      console.log('🔄 Fetching posts...');
-      const res = await fetch('/api/post');
-      const data = await res.json();
-      
-      if (data.status && data.data) {
-        console.log('✅ Posts loaded:', data.data.length, 'posts');
-        setPosts(data.data);
-      } else {
-        console.log('❌ No posts data received');
-        setPosts([]);
-      }
-    } catch (error) {
-      console.error('� Error fetching posts:', error);
-      setPosts([]);
-    }
-  }, []);
-
-  // ฟังก์ชันดึงรูปโปรไฟล์โดยตรง
-  const fetchUserProfileImage = useCallback(async () => {
-    if (!user?.id || userAvatarUrl) return;
-    
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/user/profile?token=${encodeURIComponent(token)}&includeImage=true`);
-      const data = await response.json();
-      
-      if (data.status && data.data.profileImage) {
-        const imageData = `data:image/jpeg;base64,${data.data.profileImage}`;
-        setUserAvatarUrl(imageData);
-        console.log('🖼️ Direct profile image loaded');
-      }
-    } catch (error) {
-      console.error('Error loading profile image directly:', error);
-    }
-  }, [user?.id, userAvatarUrl]);
-
   useEffect(() => {
-    // รอให้ useFastAuth โหลดข้อมูลเสร็จก่อน
-    if (isLoading) return;
+    const token = localStorage.getItem('token');
+    console.log('Token from localStorage:', token, 'Type:', typeof token);
     
-    // ตรวจสอบ authentication จาก useFastAuth
-    if (!user?.id && !user?.username) {
+    if (!token || token === 'null' || token === 'undefined') {
+      console.log('No valid token found, redirecting to login');
       navigate('/login');
       return;
     }
 
-    // ดึง profile image
-    if (user?.profileImage) {
-      setUserAvatarUrl(`data:image/jpeg;base64,${user.profileImage}`);
-    } else if (profileImage) {
-      setUserAvatarUrl(profileImage);
-    } else if (user && !profileImage) {
-      // ดึงรูปโปรไฟล์จาก API เมื่อมี user แต่ยังไม่มีรูป
-      loadProfileImage();
-    }
-
-    // เรียก fetchPosts เพียงครั้งเดียวเมื่อ user พร้อม
-    console.log('� User ready, fetching posts once...');
+    // ตรวจสอบว่า token เป็น string จริงๆ
+    const tokenString = typeof token === 'string' ? token : JSON.stringify(token);
+    console.log('Using token:', tokenString.substring(0, 30) + '...');
+    
+    fetch(`/api/user/${tokenString}`)
+      .then(res => res.json())
+      .then(data => {
+        console.log('API Response:', data);
+        if (data.status && data.data) {
+          setRealname(data.data.realname);
+          setUserId(data.data.userid);
+          setIsAdmin(data.data.admin);
+          if (data.data.profileImage) {
+            setUserAvatarUrl(`data:image/jpeg;base64,${data.data.profileImage}`);
+          } else if (data.data.avatar) {
+            setUserAvatarUrl(data.data.avatar);
+          }
+        } else {
+          localStorage.removeItem('token');
+          navigate('/login');
+        }
+      })
+      .catch(() => {
+        localStorage.removeItem('token');
+        navigate('/login');
+      });
     fetchPosts();
-  }, [user?.id, isLoading, navigate, fetchPosts]);
+    // eslint-disable-next-line
+  }, []);
 
-  // useEffect แยกสำหรับ profile image - ไม่เรียก fetchPosts
-  useEffect(() => {
-    if (isLoading || !user) return;
-
-    // ดึง profile image
-    if (user?.profileImage) {
-      setUserAvatarUrl(`data:image/jpeg;base64,${user.profileImage}`);
-    } else if (profileImage) {
-      setUserAvatarUrl(profileImage);
-    } else {
-      // ดึงรูปโปรไฟล์จาก API เมื่อมี user แต่ยังไม่มีรูป
-      loadProfileImage();
+  const fetchPosts = async () => {
+    try {
+      const res = await fetch('/api/post');
+      const data = await res.json();
+      console.log('Posts API response:', data);
+      if (data.status && data.data) {
+        console.log('Setting posts:', data.data);
+        // Log เพื่อดูข้อมูล likes ในแต่ละโพสต์
+        data.data.forEach((post, index) => {
+          console.log(`Post ${index}:`, {
+            id: post.id,
+            likes: post.likes,
+            likesBy: post.likesBy,
+            title: post.title?.substring(0, 20) + '...'
+          });
+        });
+        setPosts(data.data);
+      } else {
+        console.log('No posts data received');
+        setPosts([]);
+      }
+    } catch (error) {
+      console.error('Error fetching posts:', error);
+      setPosts([]);
     }
-  }, [user?.profileImage, profileImage, loadProfileImage, isLoading, user]);
-
-  // useEffect แยกสำหรับการอัปเดต profileImage
-  useEffect(() => {
-    if (profileImage && profileImage !== userAvatarUrl) {
-      setUserAvatarUrl(profileImage);
-      console.log('🖼️ Profile image updated in Home');
-    } else if (user?.id && !userAvatarUrl && !profileImage) {
-      // หาก useFastAuth ไม่มีรูป ให้ลองดึงโดยตรง
-      fetchUserProfileImage();
-    }
-  }, [profileImage, user?.id, userAvatarUrl, fetchUserProfileImage]);
+  };
 
   const handleDeletePost = async (postId) => {
     if (!window.confirm('คุณต้องการลบโพสต์นี้ใช่หรือไม่?')) return;
@@ -1182,7 +1134,8 @@ export default function Home() {
       // เพิ่ม postId เข้าไปใน likingPosts set
       setLikingPosts(prev => new Set([...prev, postId]));
       
-      console.log('👍 Like request for post:', postId);
+      console.log('Sending like request for post:', postId);
+      console.log('Current userid:', userid, 'Type:', typeof userid);
       
       const res = await fetch(`/api/like`, {
         method: 'POST',
@@ -1196,25 +1149,55 @@ export default function Home() {
       });
 
       const data = await res.json();
+      console.log('Like response:', data);
 
       if (res.ok && data.status) {
-        console.log('✅ Like updated successfully');
+        console.log('Before update - Post likes:', posts.find(p => p.id === postId)?.likes);
+        console.log('Before update - Post likesBy:', posts.find(p => p.id === postId)?.likesBy);
+        console.log('API Response:', data.data);
         
         // อัปเดต state ของ posts โดยใช้ข้อมูลจาก API โดยตรง
-        setPosts(prevPosts => prevPosts.map(post => 
-          post.id === postId 
-            ? { 
-                ...post, 
-                likes: data.data.likes,
-                likesBy: data.data.likesBy || []
-              }
-            : post
-        ));
+        setPosts(prevPosts => {
+          const updatedPosts = prevPosts.map(post => 
+            post.id === postId 
+              ? { 
+                  ...post, 
+                  likes: data.data.likes, // ใช้ข้อมูลจาก API โดยตรง
+                  likesBy: data.data.likesBy || [] // ใช้ข้อมูลจาก API โดยตรง
+                }
+              : post
+          );
+          
+          // Log ข้อมูลหลังอัปเดต (ไม่เรียก isUserLiked เพื่อป้องกันการเรียกซ้ำ)
+          const updatedPost = updatedPosts.find(p => p.id === postId);
+          console.log('After update - Post data:', {
+            id: updatedPost?.id,
+            likes: updatedPost?.likes,
+            likesBy: updatedPost?.likesBy,
+            userInArray: updatedPost?.likesBy?.some(id => String(id) === String(userid))
+          });
+          
+          return updatedPosts;
+        });
+
+        console.log('Updated to - likes:', data.data.likes, 'likesBy:', data.data.likesBy);
+
+        // ลบการ re-fetch เพื่อป้องกันการ reset state
+        // setTimeout(() => {
+        //   fetchPosts();
+        // }, 500);
+
+        // ไม่แสดงป๊อปอัพสำหรับการกดไลค์
+        // if (data.data.isLiked) {
+        //   showMessage('กดไลค์แล้ว! ❤️', 'success');
+        // } else {
+        //   showMessage('ยกเลิกไลค์แล้ว', 'success');
+        // }
       } else {
         throw new Error(data.message || 'Failed to toggle like');
       }
     } catch (error) {
-      console.error('💥 Like post error:', error);
+      console.error('Like post error:', error);
       showMessage(`เกิดข้อผิดพลาด: ${error.message}`, 'error');
     } finally {
       // ลบ postId ออกจาก likingPosts set
@@ -1242,7 +1225,17 @@ export default function Home() {
   const isUserLiked = useCallback((post) => {
     if (!post.likesBy || !userid) return false;
     // เชื่อมั่นใน likesBy array เป็นหลัก
-    return post.likesBy.some(id => String(id) === String(userid));
+    const hasUserInArray = post.likesBy.some(id => String(id) === String(userid));
+    
+    console.log(`isUserLiked check for post ${post.id}:`, {
+      userid: userid,
+      likes: post.likes,
+      likesBy: post.likesBy,
+      hasUserInArray,
+      result: hasUserInArray
+    });
+    
+    return hasUserInArray;
   }, [userid]);
 
   const openModal = (imgSrc) => {
@@ -1282,35 +1275,7 @@ export default function Home() {
       background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
       padding: '20px'
     }}>
-      {/* Loading State */}
-      {isLoading && (
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '60vh',
-          flexDirection: 'column'
-        }}>
-          <div style={{
-            fontSize: '48px',
-            marginBottom: '16px',
-            animation: 'pulse 1.5s ease-in-out infinite'
-          }}>
-            🔄
-          </div>
-          <div style={{
-            fontSize: '18px',
-            color: '#6b7280',
-            fontWeight: '500'
-          }}>
-            กำลังโหลด...
-          </div>
-        </div>
-      )}
-
-      {/* Main Content */}
-      {!isLoading && user && (
-        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+      <div style={{ maxWidth: '600px', margin: '0 auto' }}>
       {/* ส่วนโปรไฟล์ผู้ใช้ */}
       <div style={{
         background: 'white',
@@ -1338,118 +1303,30 @@ export default function Home() {
               src={userAvatarUrl}
               alt="avatar"
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              onError={e => { 
-                e.target.style.display = 'none';
-                // ลองโหลดใหม่อีกครั้ง
-                fetchUserProfileImage();
-              }}
+              onError={e => { e.target.style.display = 'none'; }}
             />
           ) : (
-            <div style={{ 
-              fontSize: '32px', 
-              color: '#94a3b8',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease'
-            }}
-            onClick={() => {
-              console.log('� Manual profile image reload');
-              fetchUserProfileImage();
-            }}
-            title="คลิกเพื่อโหลดรูปโปรไฟล์"
-            >
-             👤
-            </div>
+            <div style={{ fontSize: '32px', color: '#94a3b8' }}>👤</div>
           )}
         </div>
         <div style={{ 
           fontSize: '20px', 
           fontWeight: '600', 
           color: '#1e293b',
-          marginBottom: '8px'
+          marginBottom: '4px'
         }}>
-          {realname}
+          {realname || 'ผู้ใช้'}
         </div>
-        
-        {/* แสดง role และ permissions */}
         <div style={{ 
           fontSize: '14px', 
-          color: 'white',
-          background: getRoleColor(user?.role),
-          padding: '6px 16px',
+          color: '#64748b',
+          background: isAdmin ? '#fef3c7' : '#f1f5f9',
+          padding: '4px 12px',
           borderRadius: '20px',
           display: 'inline-block',
-          fontWeight: '600',
-          marginBottom: '12px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+          fontWeight: '500'
         }}>
-          {getRoleText(user?.role)}
-        </div>
-
-        {/* แสดงสิทธิ์ตาม role */}
-        <div style={{
-          background: '#f8fafc',
-          borderRadius: '12px',
-          padding: '16px',
-          margin: '16px 0',
-          border: '1px solid #e2e8f0'
-        }}>
-          <div style={{ 
-            fontSize: '14px', 
-            fontWeight: '600', 
-            color: '#374151',
-            marginBottom: '8px'
-          }}>
-            🔑 สิทธิ์การเข้าถึง
-          </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center' }}>
-            {user?.role === ROLES.STUDENT && (
-              <>
-                <span style={{ fontSize: '12px', background: '#dbeafe', color: '#1e40af', padding: '4px 8px', borderRadius: '12px', fontWeight: '500' }}>
-                  ✏️ แก้ไขโปรไฟล์
-                </span>
-                <span style={{ fontSize: '12px', background: '#dcfce7', color: '#166534', padding: '4px 8px', borderRadius: '12px', fontWeight: '500' }}>
-                  📊 เพิ่มสรุปยอด
-                </span>
-                <span style={{ fontSize: '12px', background: '#fef3c7', color: '#92400e', padding: '4px 8px', borderRadius: '12px', fontWeight: '500' }}>
-                  👁️ ดูคลังอาวุธ
-                </span>
-              </>
-            )}
-            {user?.role === ROLES.TEACHER && (
-              <>
-                <span style={{ fontSize: '12px', background: '#dbeafe', color: '#1e40af', padding: '4px 8px', borderRadius: '12px', fontWeight: '500' }}>
-                  👥 ดูข้อมูลผู้ใช้
-                </span>
-                <span style={{ fontSize: '12px', background: '#fecaca', color: '#b91c1c', padding: '4px 8px', borderRadius: '12px', fontWeight: '500' }}>
-                  ➖ ตัดคะแนน
-                </span>
-                <span style={{ fontSize: '12px', background: '#dcfce7', color: '#166534', padding: '4px 8px', borderRadius: '12px', fontWeight: '500' }}>
-                  📊 ดูสรุปยอด
-                </span>
-              </>
-            )}
-            {user?.role === ROLES.OFFICER && (
-              <>
-                <span style={{ fontSize: '12px', background: '#dbeafe', color: '#1e40af', padding: '4px 8px', borderRadius: '12px', fontWeight: '500' }}>
-                  👥 ดูข้อมูลผู้ใช้
-                </span>
-                <span style={{ fontSize: '12px', background: '#fecaca', color: '#b91c1c', padding: '4px 8px', borderRadius: '12px', fontWeight: '500' }}>
-                  ➖ ตัดคะแนน
-                </span>
-                <span style={{ fontSize: '12px', background: '#f3e8ff', color: '#7c3aed', padding: '4px 8px', borderRadius: '12px', fontWeight: '500' }}>
-                  🔫 จัดการคลังอาวุธ
-                </span>
-                <span style={{ fontSize: '12px', background: '#dcfce7', color: '#166534', padding: '4px 8px', borderRadius: '12px', fontWeight: '500' }}>
-                  📊 ดูสรุปยอด
-                </span>
-              </>
-            )}
-            {(user?.role === ROLES.ADMIN || user?.admin) && (
-              <span style={{ fontSize: '12px', background: '#fecaca', color: '#b91c1c', padding: '4px 8px', borderRadius: '12px', fontWeight: '500' }}>
-                👑 สิทธิ์เต็มรูปแบบ
-              </span>
-            )}
-          </div>
+          {isAdmin ? '👑 ผู้ดูแลระบบ' : '✨ สมาชิก'}
         </div>
       </div>
 
@@ -1849,8 +1726,7 @@ export default function Home() {
           showMessage={showMessage}
         />
       )}
-        </div>
-      )}
     </div>
+  </div>
   );
 }
