@@ -39,8 +39,7 @@ export const ROLE_PERMISSIONS = {
   [ROLES.STUDENT]: [
     PERMISSIONS.EDIT_OWN_PROFILE,
     PERMISSIONS.ADD_SUMMARY,
-    PERMISSIONS.VIEW_SUMMARY,
-    PERMISSIONS.VIEW_WEAPON_STORAGE     // เฉพาะดูได้ ไม่สามารถแก้ไข
+    PERMISSIONS.VIEW_SUMMARY
   ],
   
   [ROLES.TEACHER]: [
@@ -55,7 +54,6 @@ export const ROLE_PERMISSIONS = {
     PERMISSIONS.VIEW_ALL_DATA,
     PERMISSIONS.DEDUCT_POINTS,
     PERMISSIONS.VIEW_WEAPON_STORAGE,
-    PERMISSIONS.EDIT_WEAPON_STORAGE,    // เพิ่มสิทธิ์เบิกปืน
     PERMISSIONS.VIEW_SUMMARY
   ],
   
@@ -192,7 +190,6 @@ export const getMenuItems = (user) => {
   if (user.role === ROLES.STUDENT) {
     menuItems.push(
       { path: '/summary', label: 'ลงยอด', icon: '📊' },
-      { path: '/gun-borrowing', label: 'คลังอาวุธ', icon: '🔫' },
       { path: '/behavior-point', label: 'คะแนนความประพฤติ', icon: '⭐' }
     );
   }
@@ -200,7 +197,7 @@ export const getMenuItems = (user) => {
   // สำหรับ อาจารย์
   if (user.role === ROLES.TEACHER) {
     menuItems.push(
-      { path: '/Deductpoint', label: 'ตัดคะแนน', icon: '➖' },
+      { path: '/deduct-point', label: 'ตัดคะแนน', icon: '➖' },
       { path: '/summary', label: 'ดูสรุปยอด', icon: '📊' },
       { path: '/behavior-point', label: 'ดูคะแนนนักเรียน', icon: '⭐' }
     );
@@ -209,7 +206,7 @@ export const getMenuItems = (user) => {
   // สำหรับ นายทหาร
   if (user.role === ROLES.OFFICER) {
     menuItems.push(
-      { path: '/Deductpoint', label: 'ตัดคะแนน', icon: '➖' },
+      { path: '/deduct-point', label: 'ตัดคะแนน', icon: '➖' },
       { path: '/gun-borrowing', label: 'คลังอาวุธ', icon: '🔫' },
       { path: '/summary', label: 'ดูสรุปยอด', icon: '📊' },
       { path: '/behavior-point', label: 'ดูคะแนนนักเรียน', icon: '⭐' }
@@ -220,7 +217,7 @@ export const getMenuItems = (user) => {
   if (user.role === ROLES.ADMIN || user.admin) {
     menuItems.push(
       { path: '/role-manager', label: 'จัดการสิทธิ์ผู้ใช้', icon: '👥' },
-      { path: '/Deductpoint', label: 'ตัดคะแนน', icon: '➖' },
+      { path: '/deduct-point', label: 'ตัดคะแนน', icon: '➖' },
       { path: '/gun-borrowing', label: 'คลังอาวุธ', icon: '🔫' },
       { path: '/summary', label: 'จัดการสรุปยอด', icon: '📊' },
       { path: '/behavior-point', label: 'จัดการคะแนน', icon: '⭐' }

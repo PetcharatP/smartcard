@@ -159,7 +159,7 @@ export default function Navbar() {
                   .filter(item => item.path !== '/' && item.path !== '/profile') // ไม่แสดงหน้าหลักและโปรไฟล์
                   .map((item, index) => (
                     <p
-                      key={`menu-${item.path}-${index}`} // ป้องกัน duplicate key
+                      key={item.path}
                       className={`block px-4 py-2 text-black cursor-pointer hover:bg-gray-200 ${
                         item.path === '/role-manager' ? 'font-semibold border-t border-gray-200' : ''
                       }`}
