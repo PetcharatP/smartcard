@@ -1,0 +1,473 @@
+/* User Search Container */
+.user-search-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  z-index: 1000;
+}
+
+.user-search {
+  position: relative;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid #e5e7eb;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  width: 40px;
+}
+
+.user-search:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.user-search.expanded {
+  border-color: #3b82f6;
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.2);
+  width: 280px;
+}
+
+/* Search Icon */
+.search-icon-container {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.search-icon-container:hover {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.search-icon {
+  color: #6b7280;
+  transition: color 0.2s ease;
+}
+
+.search-icon-container:hover .search-icon {
+  color: #3b82f6;
+}
+
+/* Search Input */
+.search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 14px;
+  color: #374151;
+  padding: 0 12px 0 4px;
+  height: 100%;
+  font-family: inherit;
+}
+
+.search-input::placeholder {
+  color: #9ca3af;
+  font-size: 13px;
+}
+
+/* Search Results */
+.search-results {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 350px;
+  max-height: 400px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+  overflow-y: auto;
+  z-index: 2000;
+  backdrop-filter: blur(10px);
+}
+
+/* Search Result Item */
+.search-result-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f3f4f6;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.search-result-item:hover {
+  background: #f8fafc;
+  transform: translateX(2px);
+}
+
+.search-result-item:last-child {
+  border-bottom: none;
+}
+
+/* User Avatar */
+.user-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-right: 12px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.user-avatar img,
+.userlist-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.no-avatar {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 18px;
+  text-transform: uppercase;
+}
+
+/* User Info */
+.user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+/* User Name Row and Badges */
+.user-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.user-name {
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 16px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  margin-right: 8px;
+}
+
+/* Role Badges */
+.role-badge {
+  font-size: 9px;
+  font-weight: bold;
+  padding: 3px 6px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.role-badge.student {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+}
+
+.role-badge.teacher {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+.role-badge.officer {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  color: white;
+  box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
+}
+
+.role-badge.admin {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+}
+
+/* Admin Badge (Legacy) */
+.admin-badge {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 4px 8px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
+  animation: pulse-admin 2s ease-in-out infinite;
+}
+
+@keyframes pulse-admin {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+/* User Details */
+.user-details {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.detail-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.detail-row .label {
+  color: #6b7280;
+  font-weight: 500;
+  min-width: 45px;
+}
+
+.detail-row .value {
+  color: #374151;
+  font-weight: 400;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.detail-row .value.username {
+  color: #3b82f6;
+  font-weight: 500;
+}
+
+.detail-row .value.major-text {
+  color: #059669;
+  font-weight: 500;
+}
+
+/* Loading and No Results */
+.search-loading,
+.no-results {
+  padding: 16px;
+  text-align: center;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.search-loading {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Scrollbar Styling */
+.search-results::-webkit-scrollbar {
+  width: 6px;
+}
+
+.search-results::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.search-results::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.search-results::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .user-search {
+    width: auto;
+    min-width: 40px;
+  }
+  
+  .user-search.expanded {
+    width: 250px;
+  }
+  
+  .search-results {
+    width: 340px;
+    max-height: 350px;
+    right: -10px;
+  }
+  
+  .search-result-item {
+    padding: 14px 16px;
+  }
+  
+  .user-avatar {
+    width: 50px;
+    height: 50px;
+    margin-right: 12px;
+  }
+  
+  .user-name {
+    font-size: 15px;
+  }
+  
+  .detail-row {
+    font-size: 13px;
+  }
+  
+  .detail-row .label {
+    min-width: 50px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .user-search.expanded {
+    width: 220px;
+  }
+  
+  .search-results {
+    width: 320px;
+    right: -20px;
+    max-height: 300px;
+    border-radius: 8px;
+  }
+  
+  .search-result-item {
+    padding: 12px 14px;
+  }
+  
+  .user-avatar {
+    width: 45px;
+    height: 45px;
+    margin-right: 10px;
+  }
+  
+  .user-search {
+    height: 38px;
+  }
+  
+  .search-icon-container {
+    width: 38px;
+    height: 38px;
+  }
+  
+  .search-input {
+    font-size: 14px;
+    padding: 0 10px 0 4px;
+  }
+  
+  .user-name {
+    font-size: 14px;
+  }
+  
+  .detail-row {
+    font-size: 12px;
+    gap: 4px;
+  }
+  
+  .detail-row .label {
+    min-width: 45px;
+    font-size: 11px;
+  }
+  
+  .admin-badge {
+    font-size: 9px;
+    padding: 3px 6px;
+  }
+}
+
+/* Mobile Portrait - Very Small Screens */
+@media (max-width: 360px) {
+  .user-search.expanded {
+    width: 200px;
+  }
+  
+  .search-results {
+    width: 300px;
+    right: -30px;
+    max-height: 280px;
+  }
+  
+  .search-result-item {
+    padding: 10px 12px;
+  }
+  
+  .user-avatar {
+    width: 42px;
+    height: 42px;
+    margin-right: 8px;
+  }
+  
+  .user-name {
+    font-size: 13px;
+  }
+  
+  .detail-row {
+    font-size: 11px;
+    gap: 3px;
+  }
+  
+  .detail-row .label {
+    min-width: 40px;
+    font-size: 10px;
+  }
+  
+  .detail-row .value {
+    font-size: 11px;
+  }
+  
+  .no-avatar {
+    font-size: 16px;
+  }
+}
+
+/* Landscape Mobile */
+@media (max-width: 812px) and (orientation: landscape) {
+  .search-results {
+    max-height: 250px;
+  }
+}
+
+/* Touch-friendly improvements */
+@media (pointer: coarse) {
+  .search-result-item {
+    min-height: 60px;
+    padding: 12px 16px;
+  }
+  
+  .search-icon-container {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  
+  .user-avatar {
+    width: 48px;
+    height: 48px;
+  }
+}

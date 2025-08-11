@@ -44,6 +44,34 @@ const UserList = () => {
     }
   };
 
+  // อัปเดต role
+  const handleRoleChange = async (userid, newRole) => {
+    try {
+      const response = await fetch(`/api/user/role`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userid, role: newRole })
+      });
+      
+      const data = await response.json();
+      if (data.status) {
+        setUsers(users.map(u =>
+          u.userid === userid ? { ...u, role: newRole, admin: newRole === 'admin' } : u
+        ));
+        console.log(`User ${userid} role updated to ${newRole}`);
+      }
+    } catch (error) {
+      console.error('Error updating role:', error);
+    }
+  };
+
+  const roleOptions = {
+    "student": "นักเรียนนายสิบ",
+    "teacher": "อาจารย์", 
+    "officer": "นายทหาร",
+    "admin": "ผู้ดูแลระบบ"
+  };
+
   return (
     <div className="userlist-bg">
       <div className="userlist-container">
@@ -59,6 +87,7 @@ const UserList = () => {
               <th>Gun Number</th>
               <th>Point</th>
               <th>Major</th>
+              <th>Role</th>
               <th>Profile Image</th>
               <th>Admin</th>
             </tr>
@@ -66,7 +95,7 @@ const UserList = () => {
           <tbody>
             {users.length === 0 ? (
               <tr>
-                <td colSpan="10" className="userlist-loading">ไม่พบข้อมูลผู้ใช้</td>
+                <td colSpan="11" className="userlist-loading">ไม่พบข้อมูลผู้ใช้</td>
               </tr>
             ) : (
               users.map(user => (
@@ -79,6 +108,17 @@ const UserList = () => {
                   <td>{user.gunNumber}</td>
                   <td>{user.point}</td>
                   <td>{user.major}</td>
+                  <td>
+                    <select 
+                      value={user.role || 'student'} 
+                      onChange={e => handleRoleChange(user.userid, e.target.value)}
+                      className="role-select"
+                    >
+                      {Object.entries(roleOptions).map(([value, label]) => (
+                        <option key={value} value={value}>{label}</option>
+                      ))}
+                    </select>
+                  </td>
                   <td>
                     {user.profileImage && user.profileImage.data ? (
                       <img

@@ -1,16 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { Html5QrcodeScanner, Html5QrcodeScanType } from 'html5-qrcode';
+import { hasPermission, PERMISSIONS } from '../utils/permissions';
+import { useFastAuth } from '../hooks/useFastAuth';
 import './GunBorrowing.css';
 
 export default function GunBorrowing() {
     const apiUrl = process.env.NODE_ENV === 'production' ? '' : (import.meta.env.VITE_API_URL || '');
+    const { user } = useFastAuth();
+    
+    // Check permissions
+    const canEdit = hasPermission(user, PERMISSIONS.EDIT_WEAPON_STORAGE);
+    
+    // Debug: แสดงข้อมูล user และ permissions
+    useEffect(() => {
+        console.log('=== GunBorrowing Debug ===');
+        console.log('User:', user);
+        console.log('User Role:', user?.role);
+        console.log('Is Admin:', user?.admin);
+        console.log('Can Edit Weapon Storage:', canEdit);
+        console.log('EDIT_WEAPON_STORAGE permission:', PERMISSIONS.EDIT_WEAPON_STORAGE);
+        console.log('========================');
+    }, [user, canEdit]);
+    
     // State
     const [userQRCode, setUserQRCode] = useState('');
     const [gunQRCode, setGunQRCode] = useState('');
     const [statusMessage, setStatusMessage] = useState('');
-    const [successfulBorrows, setSuccessfulBorrows] = useState([]);
-    const [usersWithTwoScans, setUsersWithTwoScans] = useState([]);
-    const [scanCount, setScanCount] = useState({});
     const [manualUserQR, setManualUserQR] = useState('');
     const [manualGunQR, setManualGunQR] = useState('');
     const [showManualForm, setShowManualForm] = useState(false);
@@ -34,6 +49,10 @@ export default function GunBorrowing() {
     // Mobile optimization state
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
     const [isLandscape, setIsLandscape] = useState(window.innerWidth > window.innerHeight);
+    
+    // Scanner state
+    const [isScanning, setIsScanning] = useState(false);
+    const [scannerInstance, setScannerInstance] = useState(null);
 
     // Detect mobile and orientation changes
     useEffect(() => {
@@ -51,6 +70,15 @@ export default function GunBorrowing() {
         fetchPublicGuns();
         fetchTodayRecords();
     }, []);
+
+    // Cleanup scanner on unmount
+    useEffect(() => {
+        return () => {
+            if (scannerInstance) {
+                scannerInstance.clear().catch(console.error);
+            }
+        };
+    }, [scannerInstance]);
 
     // Enhanced error handling with retry mechanism
     const apiCall = async (url, options, maxRetries = 3) => {
@@ -95,6 +123,12 @@ export default function GunBorrowing() {
 
     // Auto-save function - บันทึกทันทีเมื่อสแกนสำเร็จ
     const autoSave = async (userQRCode, gunQRCode, realname, action) => {
+        // ตรวจสอบสิทธิ์ก่อนทำการเบิก/คืน
+        if (!canEdit) {
+            setStatusMessage(`❌ คุณไม่มีสิทธิ์ในการ${action === 'borrow' ? 'เบิก' : 'คืน'}อาวุธ - เฉพาะดูข้อมูลเท่านั้น`);
+            return false;
+        }
+        
         const result = await apiCall(`/api/gun-borrowing-record`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -141,9 +175,18 @@ export default function GunBorrowing() {
 
     const fetchPublicGuns = async () => {
         try {
-            const res = await fetch(`/api/public-gun`);
+            const token = localStorage.getItem('token');
+            const res = await fetch(`/api/public-gun`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
             const data = await res.json();
-            setPublicGuns(data);
+            if (data.success !== false) {
+                setPublicGuns(data);
+            } else {
+                setPublicGunStatus(data.message || 'ไม่สามารถโหลดข้อมูลปืนสาธารณะ');
+            }
         } catch {
             setPublicGunStatus('ไม่สามารถโหลดข้อมูลปืนสาธารณะ');
         }
@@ -152,7 +195,12 @@ export default function GunBorrowing() {
     // Fetch today's records from database
     const fetchTodayRecords = async () => {
         try {
-            const res = await fetch(`/api/gun-borrowing-record?date=${currentDate}`);
+            const token = localStorage.getItem('token');
+            const res = await fetch(`/api/gun-borrowing-record?date=${currentDate}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
             const data = await res.json();
             if (data.success) {
                 setSavedRecords(data.data);
@@ -165,9 +213,13 @@ export default function GunBorrowing() {
     // Save borrow record to database
     const saveBorrowRecord = async (userQRCode, gunQRCode, realname) => {
         try {
+            const token = localStorage.getItem('token');
             const res = await fetch(`/api/gun-borrowing-record`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({
                     userQRCode,
                     gunQRCode,
@@ -188,9 +240,13 @@ export default function GunBorrowing() {
     // Save return record to database
     const saveReturnRecord = async (userQRCode, gunQRCode, realname) => {
         try {
+            const token = localStorage.getItem('token');
             const res = await fetch(`/api/gun-borrowing-record`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({
                     userQRCode,
                     gunQRCode,
@@ -208,34 +264,15 @@ export default function GunBorrowing() {
         }
     };
 
-    // Save all current session data to database
-    const saveAllRecords = async () => {
-        try {
-            // Save all borrow records
-            const borrowPromises = getBorrowedList().map(record => 
-                saveBorrowRecord(record.userQRCode, record.gunQRCode, record.realname)
-            );
-            
-            // Save all return records
-            const returnPromises = getReturnedList().map(record => 
-                saveReturnRecord(record.userQRCode, record.gunQRCode, record.realname)
-            );
-
-            await Promise.all([...borrowPromises, ...returnPromises]);
-            
-            setStatusMessage('บันทึกข้อมูลทั้งหมดสำเร็จ');
-            setShowSaveButton(false);
-            fetchTodayRecords();
-        } catch (error) {
-            console.error('Failed to save all records:', error);
-            setStatusMessage('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
-        }
-    };
-
     // Load records from specific date
     const loadRecordsFromDate = async (selectedDate) => {
         try {
-            const res = await fetch(`/api/gun-borrowing-record?date=${selectedDate}`);
+            const token = localStorage.getItem('token');
+            const res = await fetch(`/api/gun-borrowing-record?date=${selectedDate}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
             const data = await res.json();
             if (data.success) {
                 setSavedRecords(data.data);
@@ -300,6 +337,13 @@ export default function GunBorrowing() {
     const handleAddPublicGun = async (e) => {
         e.preventDefault();
         if (!newPublicGun) return;
+        
+        // ตรวจสอบสิทธิ์
+        if (!canEdit) {
+            setPublicGunStatus('❌ คุณไม่มีสิทธิ์เพิ่มปืน - เฉพาะดูข้อมูลเท่านั้น');
+            return;
+        }
+        
         try {
             const res = await fetch(`/api/public-gun`, {
                 method: 'POST',
@@ -320,6 +364,12 @@ export default function GunBorrowing() {
 
     // Delete public gun
     const handleDeletePublicGun = async (gunQRCode) => {
+        // ตรวจสอบสิทธิ์
+        if (!canEdit) {
+            setPublicGunStatus('❌ คุณไม่มีสิทธิ์ลบปืน - เฉพาะดูข้อมูลเท่านั้น');
+            return;
+        }
+        
         if (!window.confirm(`ลบปืน ${gunQRCode} ?`)) return;
         try {
             const res = await fetch(`/api/public-gun`, {
@@ -338,42 +388,6 @@ export default function GunBorrowing() {
         }
     };
 
-    // รายการเบิก (เฉพาะการสแกนครั้งแรกของแต่ละ user+gun)
-    const getBorrowedList = () => {
-        const seen = new Set();
-        return successfulBorrows.filter(borrow => {
-            const key = `${borrow.userQRCode}_${borrow.gunQRCode}`;
-            if (seen.has(key)) return false;
-            seen.add(key);
-            return true;
-        });
-    };
-
-    // รายการคืน (เฉพาะการสแกนครั้งที่สองของแต่ละ user+gun)
-    const getReturnedList = () => {
-        const seen = new Set();
-        return usersWithTwoScans.filter(user => {
-            const key = `${user.userQRCode}_${user.gunQRCode}`;
-            if (seen.has(key)) return false;
-            seen.add(key);
-            return true;
-        });
-    };
-
-    // รายการที่ยังไม่คืน (มีเฉพาะการสแกนครั้งแรก แต่ไม่มีในคืน)
-    const getNotReturned = () => {
-        const returnedSet = new Set(
-            usersWithTwoScans.map(u => `${u.userQRCode}_${u.gunQRCode}`)
-        );
-        const seen = new Set();
-        return successfulBorrows.filter(borrow => {
-            const key = `${borrow.userQRCode}_${borrow.gunQRCode}`;
-            if (returnedSet.has(key) || seen.has(key)) return false;
-            seen.add(key);
-            return true;
-        });
-    };
-
     // ฟอร์มกรอกแทนการสแกน
     const handleManualSubmit = (e) => {
         e.preventDefault();
@@ -382,20 +396,6 @@ export default function GunBorrowing() {
             setGunQRCode(manualGunQR);
             setStatusMessage('กรอกข้อมูล QR Code สำเร็จ');
 
-            // Logic นับจำนวนการกรอกเหมือนกับการสแกน
-            const userKey = manualUserQR;
-            const gunKey = manualGunQR;
-            if (userKey && gunKey) {
-                const pairKey = `${userKey}_${gunKey}`;
-                setScanCount(prev => {
-                    const newCount = (prev[pairKey] || 0) + 1;
-                    if (newCount === 2) {
-                        fetchUserDetails(userKey, gunKey);
-                    }
-                    return { ...prev, [pairKey]: newCount };
-                });
-            }
-
             setManualUserQR('');
             setManualGunQR('');
         } else {
@@ -403,66 +403,133 @@ export default function GunBorrowing() {
         }
     };
 
-    // สแกน QR
-    const handleQRCodeScan = (decodedText, isUserQR) => {
+    // สแกน QR - แยกแยะอัตโนมัติ
+    const handleQRCodeScan = async (decodedText) => {
+        console.log('Scanned QR Code:', decodedText);
+        
+        // ตรวจสอบรูปแบบ QR Code เพื่อแยกแยะว่าเป็น User หรือ Gun
+        const isUserQR = await isUserQRCode(decodedText);
+        console.log('Detection result - Is User QR:', isUserQR);
+        
+        // แสดงผลการตรวจจับทันที
+        const qrType = isUserQR ? 'User' : 'Gun';
+        console.log(`🎯 Detected: ${decodedText} = ${qrType} QR`);
+        
         if (isUserQR && !userQRCode) {
             setUserQRCode(decodedText);
-            setStatusMessage('User QR Code Scanned');
+            setStatusMessage(`✅ ตรวจจับ User QR: ${decodedText}`);
         } else if (!isUserQR && !gunQRCode) {
-            setGunQRCode(decodedText);
-            setStatusMessage('Gun QR Code Scanned');
-        }
-
-        // นับจำนวนสแกนของคู่ user+gun
-        const userKey = isUserQR ? decodedText : userQRCode;
-        const gunKey = !isUserQR ? decodedText : gunQRCode;
-        if (userKey && gunKey) {
-            const pairKey = `${userKey}_${gunKey}`;
-            setScanCount(prev => {
-                const newCount = (prev[pairKey] || 0) + 1;
-                if (newCount === 2) {
-                    fetchUserDetails(userKey, gunKey);
-                }
-                return { ...prev, [pairKey]: newCount };
-            });
+            // ตัด prefix ออกจาก Gun QR ก่อนเก็บค่า
+            const cleanGunQR = decodedText.replace(/^(GUN-|WEAPON-|W-|G-|gun-|Gun-|RIFLE-|rifle-)/i, '');
+            setGunQRCode(cleanGunQR);
+            setStatusMessage(`✅ ตรวจจับ Gun QR: ${decodedText} (บันทึกเป็น: ${cleanGunQR})`);
+        } else if (isUserQR && userQRCode) {
+            // ถ้าสแกน User QR ซ้ำ
+            if (userQRCode === decodedText) {
+                setStatusMessage(`⚠️ User QR [${decodedText}] สแกนไปแล้ว`);
+            } else {
+                setStatusMessage(`⚠️ เปลี่ยน User QR: ${userQRCode} → ${decodedText}`);
+                setUserQRCode(decodedText);
+            }
+        } else if (!isUserQR && gunQRCode) {
+            // ถ้าสแกน Gun QR ซ้ำ
+            const cleanGunQR = decodedText.replace(/^(GUN-|WEAPON-|W-|G-|gun-|Gun-|RIFLE-|rifle-)/i, '');
+            if (gunQRCode === cleanGunQR) {
+                setStatusMessage(`⚠️ Gun QR [${decodedText}] สแกนไปแล้ว`);
+            } else {
+                setStatusMessage(`⚠️ เปลี่ยน Gun QR: ${gunQRCode} → ${cleanGunQR}`);
+                setGunQRCode(cleanGunQR);
+            }
         }
     };
 
-    // ดึงข้อมูล user และ Auto-save การคืน
-    const fetchUserDetails = async (userQRCode, gunQRCode) => {
+    // ฟังก์ชันตรวจสอบว่า QR Code เป็น User หรือ Gun โดยเช็คจาก database
+    const isUserQRCode = async (qrText) => {
+        console.log('Checking QR Code from database:', qrText);
+        
         try {
-            const response = await fetch(`/api/get-user-details?userQRCode=${userQRCode}`);
+            // เรียก API เพื่อตรวจสอบว่า QR Code นี้เป็น User หรือไม่
+            const response = await fetch(`/api/check-user-qr?qr=${encodeURIComponent(qrText)}`);
             const data = await response.json();
+            
             if (data.success) {
-                const { realname } = data;
-                
-                // Auto-save return to database immediately
-                const saved = await autoSave(userQRCode, gunQRCode, realname, 'return');
-                
-                if (saved) {
-                    // เพิ่มข้อมูลใน session สำหรับแสดงผล
-                    const currentTime = new Date().toLocaleString();
-                    setUsersWithTwoScans(prevUsers => {
-                        if (!prevUsers.some(user => user.userQRCode === userQRCode && user.gunQRCode === gunQRCode)) {
-                            return [...prevUsers, { userQRCode, gunQRCode, realname, time: currentTime }];
-                        }
-                        return prevUsers;
-                    });
+                if (data.isUser) {
+                    console.log('Detected as User QR from database:', data.userInfo);
+                    return true;
                 } else {
-                    setStatusMessage('🔄 บันทึกการคืนไม่สำเร็จ กรุณาลองใหม่');
+                    console.log('QR not found in user database, checking patterns');
+                    // ถ้าไม่พบใน database ให้เช็ค pattern เพิ่มเติม
+                    return checkPatternForUserQR(qrText);
                 }
             } else {
-                setStatusMessage('Error: Unable to fetch user details');
+                console.log('Database check failed, using pattern matching');
+                return checkPatternForUserQR(qrText);
             }
         } catch (error) {
-            console.error('Fetch user details error:', error);
-            setStatusMessage('Error: Failed to fetch user data');
+            console.error('Error checking QR code:', error);
+            console.log('Database unavailable, using pattern matching');
+            return checkPatternForUserQR(qrText);
         }
     };
 
-    // เริ่มสแกน - Mobile Optimized
-    const startScanner = async (isUserQR) => {
-        const scannerId = isUserQR ? 'user-qr-reader' : 'gun-qr-reader';
+    // ฟังก์ชันเช็ค pattern สำหรับ User QR (ไม่จำกัดจำนวนหลัก)
+    const checkPatternForUserQR = (qrText) => {
+        console.log('Checking pattern for QR:', qrText);
+        
+        // กรณีที่ 1: ถ้ามี prefix ของปืนชัดเจน ถือว่าเป็น Gun QR
+        if (/^(GUN-|WEAPON-|W-|G-|gun-|Gun-|RIFLE-|rifle-)/i.test(qrText)) {
+            console.log('Pattern: Detected as Gun QR - has gun prefix');
+            return false;
+        }
+        
+        // กรณีที่ 2: ถ้าเป็นตัวเลขที่มีรูปแบบเหมือน serial number ของปืน
+        if (/^[0-9]{1,3}[-_][0-9]+$/.test(qrText) || /^[A-Z][0-9]{3,6}$/.test(qrText)) {
+            console.log('Pattern: Detected as Gun QR - serial number format');
+            return false;
+        }
+        
+        // กรณีที่ 3: ถ้าเป็นตัวเลขล้วนและมีความยาวเหมาะสมสำหรับ User ID
+        if (/^\d+$/.test(qrText)) {
+            if (qrText.length >= 3) { // อย่างน้อย 3 หลัก
+                console.log('Pattern: Detected as User QR - numeric user ID');
+                return true;
+            } else {
+                console.log('Pattern: Detected as Gun QR - too short for user ID');
+                return false;
+            }
+        }
+        
+        // กรณีที่ 4: ถ้าเป็นตัวอักษรผสมตัวเลข อาจเป็น User ID
+        if (/^[A-Za-z][0-9]+$/.test(qrText)) {
+            console.log('Pattern: Detected as User QR - alphanumeric user ID');
+            return true;
+        }
+        
+        // กรณีที่ 5: ถ้ามีอักขระพิเศษหรือรูปแบบแปลกๆ ถือว่าเป็น Gun QR
+        if (/[^A-Za-z0-9]/.test(qrText) && !/^[A-Za-z0-9]+$/.test(qrText)) {
+            console.log('Pattern: Detected as Gun QR - contains special characters');
+            return false;
+        }
+        
+        // กรณีอื่นๆ ให้ดูจากความยาว - ถ้าสั้นมากอาจเป็นปืน ถ้ายาวมากอาจเป็น user
+        if (qrText.length <= 2) {
+            console.log('Pattern: Detected as Gun QR - very short');
+            return false;
+        } else {
+            console.log('Pattern: Detected as User QR - default case');
+            return true;
+        }
+    };
+
+    // เริ่มสแกน - แบบรวม (สแกนได้ทั้ง User และ Gun) - เปิดค้างไว้
+    const startScanner = async () => {
+        // ถ้ากำลัง scan อยู่แล้ว ให้หยุด
+        if (isScanning && scannerInstance) {
+            stopScanner();
+            return;
+        }
+        
+        const scannerId = 'qr-reader';
         
         // ตรวจสอบ browser support ก่อน
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -499,6 +566,8 @@ export default function GunBorrowing() {
         };
 
         const qrCodeScanner = new Html5QrcodeScanner(scannerId, scannerConfig);
+        setScannerInstance(qrCodeScanner);
+        setIsScanning(true);
 
         qrCodeScanner.render(
             (decodedText) => {
@@ -507,8 +576,10 @@ export default function GunBorrowing() {
                     navigator.vibrate(200);
                 }
                 
-                handleQRCodeScan(decodedText, isUserQR);
-                qrCodeScanner.clear().catch(console.error);
+                // แยกแยะ QR Code โดยอัตโนมัติ
+                handleQRCodeScan(decodedText);
+                // ไม่ปิด scanner หลังจากสแกน - ให้ค้างไว้เพื่อสแกนต่อ
+                // qrCodeScanner.clear().catch(console.error);
             },
             (errorMessage) => {
                 console.log('Scan failed:', errorMessage);
@@ -522,115 +593,118 @@ export default function GunBorrowing() {
             }
         );
     };
-
-    // สำหรับเบิกอาวุธ (สแกนครั้งแรก) - ใช้ Auto-save
-    const handleSubmit = async () => {
-        try {
-            // ตรวจสอบสิทธิ์การเบิกก่อน
-            const response = await fetch(`/api/check-gun-borrowing`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userQRCode, gunQRCode }),
-            });
-            const data = await response.json();
-            
-            if (data.success) {
-                const realname = data.realname;
-                
-                // Auto-save to database immediately
-                const saved = await autoSave(userQRCode, gunQRCode, realname, 'borrow');
-                
-                if (saved) {
-                    // เพิ่มข้อมูลใน session สำหรับแสดงผล
-                    const newBorrowRecord = {
-                        realname,
-                        userQRCode,
-                        gunQRCode,
-                        time: new Date().toLocaleString(),
-                    };
-                    
-                    setSuccessfulBorrows((prev) => {
-                        const isDuplicate = prev.some(record =>
-                            record.userQRCode === newBorrowRecord.userQRCode &&
-                            record.gunQRCode === newBorrowRecord.gunQRCode
-                        );
-                        if (!isDuplicate) {
-                            return [...prev, newBorrowRecord];
-                        }
-                        return prev;
-                    });
-                } else {
-                    // ถ้าบันทึกไม่สำเร็จ ให้แสดง offline mode
-                    setStatusMessage('🔄 บันทึกข้อมูลไม่สำเร็จ กรุณาลองใหม่');
-                }
-            } else {
-                setStatusMessage('QR Codes do not match');
-            }
-        } catch (error) {
-            console.error('Submit error:', error);
-            setStatusMessage('❌ เกิดข้อผิดพลาด: ' + error.message);
+    
+    // หยุดสแกน
+    const stopScanner = () => {
+        if (scannerInstance) {
+            scannerInstance.clear().catch(console.error);
+            setScannerInstance(null);
+            setIsScanning(false);
         }
     };
 
-    // เรียก handleSubmit เมื่อสแกน user และ gun ครั้งแรกครบ
+    // เรียก checkUserGunMatch เมื่อสแกน user และ gun ครั้งแรกครบ
     useEffect(() => {
         if (userQRCode && gunQRCode) {
-            handleSubmit();
+            checkUserGunMatch();
         }
         // eslint-disable-next-line
     }, [userQRCode, gunQRCode]);
 
-    // รีเซ็ตการสแกน
-    const resetScanner = () => {
-        setUserQRCode('');
-        setGunQRCode('');
-        setStatusMessage('');
+    // เช็คว่าข้อมูล User และ Gun ตรงกับ Database หรือไม่
+    const checkUserGunMatch = async () => {
+        try {
+            setStatusMessage('🔍 กำลังตรวจสอบข้อมูลกับ Database...');
+            
+            // เช็คข้อมูล User
+            const userResponse = await fetch(`/api/get-user-details?userQRCode=${userQRCode}`);
+            const userData = await userResponse.json();
+            
+            if (!userData.success) {
+                setStatusMessage(`❌ ไม่พบข้อมูล User: ${userQRCode} ในระบบ`);
+                return;
+            }
+
+            // เช็คว่ามีการยืมปืนคู่นี้ในวันนี้แล้วหรือไม่
+            const today = new Date().toISOString().split('T')[0];
+            const recordResponse = await fetch(`/api/gun-borrowing-record?date=${today}&userQRCode=${userQRCode}&gunQRCode=${gunQRCode}`);
+            const recordData = await recordResponse.json();
+            
+            if (recordData.success && recordData.data.length > 0) {
+                // มีการยืมแล้ว - นี่คือการคืน
+                const existingRecord = recordData.data[0];
+                
+                if (existingRecord.status === 'borrowed') {
+                    // ยังไม่ได้คืน - ทำการคืน
+                    const returnResult = await autoSave(userQRCode, gunQRCode, userData.realname, 'return');
+                    if (returnResult) {
+                        setStatusMessage(`✅ คืนปืนสำเร็จ: ${userData.realname} คืนปืน ${gunQRCode}`);
+                        resetForNextScan();
+                    }
+                } else {
+                    // คืนแล้ว - แจ้งเตือน
+                    setStatusMessage(`⚠️ ${userData.realname} คืนปืน ${gunQRCode} ไปแล้ววันนี้`);
+                }
+                return;
+            }
+
+            // ไม่มีการยืมก่อนหน้า - นี่คือการยืมครั้งแรก
+            // เช็คว่า Gun Number ตรงกับ User หรือไม่ (ใช้ gunQRCode ที่ตัด prefix แล้ว)
+            const userGunNumber = userData.gunNumber;
+            if (userGunNumber && userGunNumber === gunQRCode) {
+                setStatusMessage(`✅ ตรวจสอบสำเร็จ: ${userData.realname} | ปืน: ${gunQRCode}`);
+                // ดำเนินการยืมต่อ
+                const saved = await autoSave(userQRCode, gunQRCode, userData.realname, 'borrow');
+                if (saved) {
+                    resetForNextScan();
+                }
+            } else if (userGunNumber) {
+                setStatusMessage(`⚠️ ปืนไม่ตรงกัน! ${userData.realname} ควรใช้ปืน: ${userGunNumber} แต่สแกน: ${gunQRCode}`);
+                // ยังให้ดำเนินการต่อได้
+                setTimeout(async () => {
+                    const saved = await autoSave(userQRCode, gunQRCode, userData.realname, 'borrow');
+                    if (saved) {
+                        resetForNextScan();
+                    }
+                }, 2000);
+            } else {
+                setStatusMessage(`⚠️ ${userData.realname} ไม่มีปืนที่กำหนดในระบบ แต่สแกนปืน: ${gunQRCode}`);
+                // อนุญาตให้ใช้ปืนอื่นได้
+                const saved = await autoSave(userQRCode, gunQRCode, userData.realname, 'borrow');
+                if (saved) {
+                    resetForNextScan();
+                }
+            }
+            
+        } catch (error) {
+            console.error('Check user-gun match error:', error);
+            setStatusMessage('❌ เกิดข้อผิดพลาดในการตรวจสอบข้อมูล');
+        }
     };
 
-    // ปุ่มพิมพ์รายงาน (เฉพาะรายชื่อที่ยังไม่ได้คืน)
-    const handlePrint = () => {
-        const notReturned = getNotReturned();
-        const printWindow = window.open('', '', 'width=800,height=600');
-        printWindow.document.write(`
-            <html>
-            <head>
-                <title>Gun Borrowing Report</title>
-                <style>
-                    body { font-family: Arial, sans-serif; padding: 24px; }
-                    table { border-collapse: collapse; width: 100%; margin-bottom: 24px; }
-                    th, td { border: 1px solid #888; padding: 8px; text-align: left; }
-                    th { background: #f0f0f0; }
-                </style>
-            </head>
-            <body>
-                <div><b>จำนวนการเบิก:</b> ${getBorrowedList().length}</div>
-                <div><b>จำนวนการคืน:</b> ${getReturnedList().length}</div>
-                <h3 style="margin-top:24px;">รายชื่อที่ยังไม่ได้คืน</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>User Name</th>
-                            <th>Gun QR Code</th>
-                            <th>Time</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${notReturned.length === 0
-                            ? `<tr><td colspan="3" style="text-align:center;">-</td></tr>`
-                            : notReturned.map(user => `
-                                <tr>
-                                    <td>${user.realname}</td>
-                                    <td>${user.gunQRCode}</td>
-                                    <td>${user.time}</td>
-                                </tr>
-                            `).join('')}
-                    </tbody>
-                </table>
-            </body>
-            </html>
-        `);
-        printWindow.document.close();
-        printWindow.print();
+    // รีเซ็ต state หลังจากเสร็จสิ้นการประมวลผล (สำหรับสแกนคู่ต่อไป)
+    const resetForNextScan = () => {
+        setTimeout(() => {
+            setUserQRCode('');
+            setGunQRCode('');
+            setStatusMessage('🔄 พร้อมสแกนคู่ต่อไป');
+        }, 3000); // รอ 3 วินาทีแล้วรีเซ็ต
+    };
+
+    // รีเซ็ตการสแกน
+    const resetScanner = () => {
+        // หยุด scanner ก่อน
+        stopScanner();
+        
+        // รีเซ็ต state
+        setUserQRCode('');
+        setGunQRCode('');
+        setStatusMessage('🔄 รีเซ็ตเรียบร้อย - พร้อมสแกนใหม่');
+        
+        // เริ่มต้น scanner ใหม่อัตโนมัติ
+        setTimeout(() => {
+            setStatusMessage('');
+        }, 2000);
     };
 
     return (
@@ -638,58 +712,153 @@ export default function GunBorrowing() {
             <div className="gun-borrowing-container">
                 <h1 className="gun-borrowing-title">ระบบยืม-คืนปืน</h1>
                 
+                {/* แสดงข้อมูล Role และ Permissions สำหรับ Debug */}
+                <div style={{
+                    background: '#f0f9ff',
+                    border: '1px solid #0284c7',
+                    borderRadius: '8px',
+                    padding: '12px',
+                    margin: '16px 0',
+                    fontSize: '14px'
+                }}>
+                    <div><strong>ผู้ใช้:</strong> {user?.realname || user?.username || 'ไม่ระบุ'}</div>
+                    <div><strong>Role:</strong> {user?.role || 'ไม่ระบุ'}</div>
+                    <div><strong>Admin:</strong> {user?.admin ? 'ใช่' : 'ไม่ใช่'}</div>
+                    <div><strong>สิทธิ์แก้ไขคลังอาวุธ:</strong> <span style={{color: canEdit ? '#059669' : '#dc2626'}}>{canEdit ? '✅ มีสิทธิ์' : '❌ ไม่มีสิทธิ์'}</span></div>
+                </div>
+                
                 <div className="gun-borrowing-card">
-                    {/* สแกน User QR - Mobile Optimized */}
-                    <div className="qr-section">
-                        <label className="qr-label">
-                            User QR Code
-                        </label>
-                        <div id="user-qr-reader" className="qr-reader"></div>
+                    {/* แสดง Scanner เฉพาะผู้ที่มีสิทธิ์แก้ไข */}
+                    {canEdit ? (
+                        <div className="edit-mode">
+                            {/* สแกน QR Code แบบรวม - สแกนได้ทั้ง User และ Gun */}
+                            <div className="qr-section">
+                                <label className="qr-label">
+                                    สแกน QR Code (User หรือ Gun)
+                                </label>
+                        <div id="qr-reader" className="qr-reader"></div>
                         <button 
-                            onClick={() => startScanner(true)}
-                            className="qr-scan-btn user"
+                            onClick={() => startScanner()}
+                            className="qr-scan-btn"
                             disabled={isLoading}
+                            style={{
+                                background: isLoading ? '#f3f4f6' : isScanning ? '#dc2626' : '#3b82f6',
+                                color: isLoading ? '#9ca3af' : 'white',
+                                border: '1px solid #d1d5db',
+                                borderRadius: '8px',
+                                padding: '12px 24px',
+                                cursor: isLoading ? 'not-allowed' : 'pointer',
+                                fontSize: '16px',
+                                fontWeight: '500',
+                                width: '100%',
+                                margin: '8px 0'
+                            }}
                         >
-                            {isLoading ? "🔄 กำลังเปิดกล้อง..." : "📷 สแกน User QR Code"}
+                            {isLoading 
+                                ? "🔄 กำลังเปิดกล้อง..." 
+                                : isScanning 
+                                    ? "🛑 หยุดสแกน QR Code" 
+                                    : "📷 เปิดกล้องสแกน QR Code"
+                            }
                         </button>
                         <div className="qr-help-text">
-                            💡 {isMobile ? "หมุนโทรศัพท์เป็นแนวตั้ง เพื่อสแกนที่ดีที่สุด" : "หากใช้ Android: อนุญาตการใช้กล้อง และใช้ HTTPS หรือ localhost เท่านั้น"}
+                            💡 {isMobile 
+                                ? isScanning 
+                                    ? "📱 กล้องเปิดแล้ว - สแกน User QR หรือ Gun QR ได้ทันที" 
+                                    : "หมุนโทรศัพท์เป็นแนวตั้ง สแกน User QR หรือ Gun QR ได้ทันที"
+                                : isScanning 
+                                    ? "🎥 กล้องเปิดแล้ว - สแกน QR Code ใดก็ได้ (User หรือ Gun) ระบบจะแยกแยะให้อัตโนมัติ"
+                                    : "สแกน QR Code ใดก็ได้ (User หรือ Gun) ระบบจะแยกแยะให้อัตโนมัติ"
+                            }
                         </div>
-                        <div className="qr-result">
-                            <b>Scanned:</b> {userQRCode ? (
-                                <span className="qr-result-value">✅ {userQRCode}</span>
-                            ) : (
-                                <span className="qr-result-none">None</span>
-                            )}
+                        
+                        {/* แสดงผลการสแกน */}
+                        <div style={{ 
+                            display: 'flex', 
+                            gap: '16px', 
+                            marginTop: '12px',
+                            flexDirection: isMobile ? 'column' : 'row'
+                        }}>
+                            <div className="qr-result" style={{ flex: 1 }}>
+                                <b>👤 User:</b> {userQRCode ? (
+                                    <span className="qr-result-value" style={{ color: '#059669' }}>✅ {userQRCode}</span>
+                                ) : (
+                                    <span className="qr-result-none" style={{ color: '#6b7280' }}>ยังไม่ได้สแกน</span>
+                                )}
+                            </div>
+                            <div className="qr-result" style={{ flex: 1 }}>
+                                <b>🔫 Gun:</b> {gunQRCode ? (
+                                    <span className="qr-result-value" style={{ color: '#dc2626' }}>✅ {gunQRCode}</span>
+                                ) : (
+                                    <span className="qr-result-none" style={{ color: '#6b7280' }}>ยังไม่ได้สแกน</span>
+                                )}
+                            </div>
                         </div>
-                    </div>
-                    {/* สแกน Gun QR - Mobile Optimized */}
-                    <div className="qr-section">
-                        <label className="qr-label">
-                            Gun QR Code
-                        </label>
-                        <div id="gun-qr-reader" className="qr-reader"></div>
-                        <button 
-                            onClick={() => startScanner(false)}
-                            className="qr-scan-btn gun"
-                            disabled={isLoading}
-                        >
-                            {isLoading ? "🔄 กำลังเปิดกล้อง..." : "🔫 สแกน Gun QR Code"}
-                        </button>
-                        <div className="qr-help-text gun-help">
-                            💡 {isMobile ? "ถ้าสแกนไม่ได้ ให้กดปุ่มด้านล่างเพื่อกรอกด้วยตนเอง" : "หากไม่สามารถใช้กล้องได้ ให้ใช้ฟอร์มกรอกข้อมูลด้านล่าง"}
-                        </div>
-                        <div className="qr-result">
-                            <b>Scanned:</b> {gunQRCode ? (
-                                <span className="qr-result-value">✅ {gunQRCode}</span>
-                            ) : (
-                                <span className="qr-result-none">None</span>
-                            )}
-                        </div>
+                        
+                        {/* แสดงสถานะความคืบหน้า */}
+                        {(userQRCode || gunQRCode) && (
+                            <div style={{
+                                marginTop: '12px',
+                                padding: '8px 12px',
+                                background: userQRCode && gunQRCode ? '#dcfce7' : '#fef3c7',
+                                border: `1px solid ${userQRCode && gunQRCode ? '#16a34a' : '#f59e0b'}`,
+                                borderRadius: '6px',
+                                fontSize: '14px',
+                                color: userQRCode && gunQRCode ? '#166534' : '#92400e'
+                            }}>
+                                {userQRCode && gunQRCode 
+                                    ? '✅ สแกนครบแล้ว! กำลังตรวจสอบข้อมูล...'
+                                    : `⏳ สแกนแล้ว ${(userQRCode ? 1 : 0) + (gunQRCode ? 1 : 0)}/2 รายการ - ${!userQRCode ? 'ต้องการ User QR' : 'ต้องการ Gun QR'}`
+                                }
+                            </div>
+                        )}
+                        
+                        {/* แสดงสถานะ Scanner */}
+                        {isScanning && (
+                            <div style={{
+                                marginTop: '8px',
+                                padding: '6px 10px',
+                                background: '#e0f2fe',
+                                border: '1px solid #0284c7',
+                                borderRadius: '6px',
+                                fontSize: '12px',
+                                color: '#0369a1',
+                                textAlign: 'center'
+                            }}>
+                                🎥 กล้องเปิดอยู่ - พร้อมสแกน QR Code
+                            </div>
+                        )}
+                        
+                        {/* Debug Information */}
+                        {(userQRCode || gunQRCode) && (
+                            <div style={{
+                                marginTop: '8px',
+                                padding: '6px 10px',
+                                background: '#f1f5f9',
+                                border: '1px solid #cbd5e1',
+                                borderRadius: '6px',
+                                fontSize: '11px',
+                                color: '#475569'
+                            }}>
+                                🔍 Debug: {userQRCode ? `User(${userQRCode})` : 'User(-)'} | {gunQRCode ? `Gun(${gunQRCode})` : 'Gun(-)'}
+                            </div>
+                        )}
                     </div>
                     <button 
                         onClick={resetScanner}
                         className="btn-reset"
+                        style={{
+                            background: '#f59e0b',
+                            color: 'white',
+                            border: '1px solid #d97706',
+                            borderRadius: '8px',
+                            padding: '10px 20px',
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            fontWeight: '500',
+                            width: '100%',
+                            marginTop: '12px'
+                        }}
                     >
                         🔄 เริ่มสแกนใหม่
                     </button>
@@ -736,6 +905,39 @@ export default function GunBorrowing() {
                         </form>
                     )}
 
+                    {/* ปุ่มทดสอบการตรวจจับ QR Code */}
+                    <div style={{ marginTop: '12px' }}>
+                        <details style={{ marginBottom: '8px' }}>
+                            <summary style={{ 
+                                cursor: 'pointer', 
+                                fontSize: '12px', 
+                                color: '#6b7280',
+                                marginBottom: '8px'
+                            }}>
+                                🧪 ทดสอบการตรวจจับ QR Code
+                            </summary>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                                {/* ทดสอบ User QR */}
+                                <button onClick={() => handleQRCodeScan('1234567890')} style={{ fontSize: '10px', padding: '4px 8px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '4px' }}>
+                                    Test: 1234567890
+                                </button>
+                                <button onClick={() => handleQRCodeScan('A123')} style={{ fontSize: '10px', padding: '4px 8px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '4px' }}>
+                                    Test: A123
+                                </button>
+                                {/* ทดสอบ Gun QR */}
+                                <button onClick={() => handleQRCodeScan('GUN-001')} style={{ fontSize: '10px', padding: '4px 8px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '4px' }}>
+                                    Test: GUN-001
+                                </button>
+                                <button onClick={() => handleQRCodeScan('WEAPON-123')} style={{ fontSize: '10px', padding: '4px 8px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '4px' }}>
+                                    Test: WEAPON-123
+                                </button>
+                                <button onClick={() => handleQRCodeScan('ABC123DEF')} style={{ fontSize: '10px', padding: '4px 8px', background: '#6b7280', color: 'white', border: 'none', borderRadius: '4px' }}>
+                                    Test: ABC123DEF
+                                </button>
+                            </div>
+                        </details>
+                    </div>
+
                     {statusMessage && (
                         <div className={`gun-borrowing-status ${statusMessage.includes('Successful') || statusMessage.includes('✅') ? 'success' : 'error'}`}>
                             {statusMessage}
@@ -772,11 +974,27 @@ export default function GunBorrowing() {
                         </div>
                     )}
                 </div>
+                    ) : (
+                        /* แสดงข้อความสำหรับ View Only */
+                        <div style={{
+                            padding: '20px',
+                            textAlign: 'center',
+                            background: '#f8fafc',
+                            border: '2px dashed #cbd5e1',
+                            borderRadius: '8px',
+                            color: '#64748b',
+                            margin: '16px 0'
+                        }}>
+                            <h3 style={{ margin: '0 0 8px 0', color: '#475569' }}>📖 โหมดดูข้อมูลเท่านั้น</h3>
+                            <p style={{ margin: 0, fontSize: '14px' }}>คุณสามารถดูข้อมูลการเบิก-คืนปืนได้ แต่ไม่สามารถทำการเบิก/คืนหรือเพิ่มปืนใหม่ได้</p>
+                        </div>
+                    )}
 
                 {/* --- ส่วนจัดการปืนสาธารณะ --- */}
                 <div className="public-gun-section">
                     <h2 className="public-gun-title">ปืนสาธารณะ (Public Gun)</h2>
                     
+                    {canEdit && (
                     <button
                         type="button"
                         className="gun-borrowing-print-btn"
@@ -785,8 +1003,9 @@ export default function GunBorrowing() {
                     >
                         {showAddPublicGunForm ? "ปิดฟอร์มเพิ่มปืน" : "เพิ่มปืนสาธารณะ"}
                     </button>
+                    )}
 
-                    {showAddPublicGunForm && (
+                    {canEdit && showAddPublicGunForm && (
                         <form onSubmit={handleAddPublicGun} className="public-gun-form">
                             <input
                                 type="text"
@@ -822,6 +1041,7 @@ export default function GunBorrowing() {
                                         <tr key={gun.gunQRCode}>
                                             <td>{gun.gunQRCode}</td>
                                             <td>
+                                                {canEdit && (
                                                 <button
                                                     type="button"
                                                     style={{
@@ -836,6 +1056,7 @@ export default function GunBorrowing() {
                                                 >
                                                     ลบ
                                                 </button>
+                                                )}
                                             </td>
                                         </tr>
                                     ))
@@ -845,32 +1066,6 @@ export default function GunBorrowing() {
                     </div>
                 </div>
                 {/* --- จบส่วนจัดการปืนสาธารณะ --- */}
-                {/* ปุ่มพิมพ์รายงานอยู่ตรงกลาง */}
-            <div
-                className="gun-borrowing-print-row"
-                style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    gap: "16px",
-                    maxWidth: 1200,
-                    margin: "0 auto 16px auto"
-                }}
-            >
-                <button className="gun-borrowing-print-btn" onClick={handlePrint}>
-                    📄 พิมพ์รายงาน
-                </button>
-                
-                {/* แสดงสถานะ Auto-save */}
-                <div style={{ 
-                    background: "#e8f5e8", 
-                    padding: "8px 16px", 
-                    borderRadius: 20, 
-                    fontSize: "0.9rem",
-                    color: "#2e7d32"
-                }}>
-                    ✅ บันทึกอัตโนมัติ
-                </div>
-            </div>
 
             {/* แสดงข้อมูลที่บันทึกแล้วจาก Database */}
             <div style={{ 
@@ -1027,95 +1222,7 @@ export default function GunBorrowing() {
                 )}
             </div>
             </div>
-            {/* --- รายการเบิก/คืน/ยังไม่คืน --- */}
-            <div className="gun-borrowing-list-row">
-                <div className="gun-borrowing-list-card">
-                    <h2>รายการเบิกอาวุธ</h2>
-                    <p>จำนวนการเบิก: <b>{getBorrowedList().length}</b></p>
-                    {getBorrowedList().length === 0 ? (
-                        <p className="text-center mt-4">No borrow records available</p>
-                    ) : (
-                        <div className="table-wrapper">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>User Name</th>
-                                        <th>Gun QR Code</th>
-                                        <th>Time</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {getBorrowedList().map((record, index) => (
-                                        <tr key={index}>
-                                            <td>{record.realname}</td>
-                                            <td>{record.gunQRCode}</td>
-                                            <td>{record.time}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </div>
-                <div className="gun-borrowing-list-card">
-                    <h2>รายการส่งคืนอาวุธ</h2>
-                    <p>จำนวนการส่งคืน: <b>{getReturnedList().length}</b></p>
-                    {getReturnedList().length === 0 ? (
-                        <p className="text-center mt-4">No users scanned both QR codes twice</p>
-                    ) : (
-                        <div className="table-wrapper">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>User Name</th>
-                                        <th>Gun QR Code</th>
-                                        <th>Time</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {getReturnedList().map((user, index) => (
-                                        <tr key={index}>
-                                            <td>{user.realname}</td>
-                                            <td>{user.gunQRCode}</td>
-                                            <td>{user.time}</td>
-                                            <td className="status-returned">✅</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </div>
-                <div className="gun-borrowing-list-card">
-                    <h2>รายชื่อที่ยังไม่ได้คืน</h2>
-                    <p>จำนวน: <b>{getNotReturned().length}</b></p>
-                    {getNotReturned().length === 0 ? (
-                        <p className="text-center mt-4">ไม่มีข้อมูล</p>
-                    ) : (
-                        <div className="table-wrapper">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>User Name</th>
-                                        <th>Gun QR Code</th>
-                                        <th>Time</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {getNotReturned().map((user, index) => (
-                                        <tr key={index}>
-                                            <td>{user.realname}</td>
-                                            <td>{user.gunQRCode}</td>
-                                            <td>{user.time}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </div>
-            </div>
+        </div>
         </div>
     );
 }

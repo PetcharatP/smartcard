@@ -12,6 +12,15 @@ import ViewProfile from './pages/ViewPofile.jsx';
 import GunBorrowing from './pages/GunBorrowing.jsx';
 import Navbar from './components/Navbar';
 import Summary from './pages/Summary.jsx';
+import RoleManager from './pages/RoleManager.jsx';
+import PermissionTestPage from './pages/PermissionTestPage.jsx';
+import { withPermission } from './components/PermissionWrapper';
+
+// ห่อ components ด้วย permission wrapper
+const ProtectedDeductPoint = withPermission(DeductPoint, 'deduct-point');
+const ProtectedGunBorrowing = withPermission(GunBorrowing, 'gun-borrowing');
+const ProtectedRoleManager = withPermission(RoleManager, 'role-manager');
+const ProtectedSummary = withPermission(Summary, 'summary');
 
 
 function AppContent() {
@@ -35,11 +44,7 @@ function AppContent() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/behavior-point" element={<BehaviorPoint />} />
-        <Route path="/DeductPoint" element={
-          <ProtectedRoute>
-            <DeductPoint />
-          </ProtectedRoute>
-        } />
+        <Route path="/DeductPoint" element={<ProtectedDeductPoint />} />
         <Route path="/edit-profile" element={
           <ProtectedRoute>
             <EditProfile />
@@ -50,14 +55,12 @@ function AppContent() {
             <ViewProfile />
           </ProtectedRoute>
         } />
-        <Route path="/gun-borrowing" element={
+        <Route path="/gun-borrowing" element={<ProtectedGunBorrowing />} />
+        <Route path="/summary" element={<ProtectedSummary />} />
+        <Route path="/role-manager" element={<ProtectedRoleManager />} />
+        <Route path="/permission-test" element={
           <ProtectedRoute>
-            <GunBorrowing />
-          </ProtectedRoute>
-        } />
-        <Route path="/summary" element={
-          <ProtectedRoute>
-            <Summary />
+            <PermissionTestPage />
           </ProtectedRoute>
         } />
         <Route path="*" element={<h1>404 Not Found</h1>} />

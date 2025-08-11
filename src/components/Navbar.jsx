@@ -4,6 +4,8 @@ import logo from '../pic/logo.jpeg';
 import './Navbar.css';
 import { VscAccount, VscThreeBars } from "react-icons/vsc";
 import { motion, AnimatePresence } from 'framer-motion';
+import UserSearch from './UserSearch';
+import { getMenuItems, hasPermission, PERMISSIONS } from '../utils/permissions';
 
 export default function Navbar() {
   const [realname, setRealname] = useState('');
@@ -11,6 +13,8 @@ export default function Navbar() {
   const [blood, setBlood] = useState('');
   const [major, setMajor] = useState('');
   const [profileImage, setProfileImage] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [user, setUser] = useState(null); // เพิ่มตัวแปร user
   const [showDropdown, setShowDropdown] = useState(false);
   const [showGunBehaviorMenu, setShowGunBehaviorMenu] = useState(false);
   const apiUrl = process.env.NODE_ENV === 'production' ? '' : (import.meta.env.VITE_API_URL || '');
@@ -18,6 +22,9 @@ export default function Navbar() {
   const location = useLocation();
   const profileRef = useRef(null);
   const gunBehaviorRef = useRef(null);
+
+  // รับเมนูตาม Role
+  const menuItems = getMenuItems(user);
   const majorOptions = [
     { value: "ME", label: "วิศวกรรมเครื่องกล" },
     { value: "EE", label: "วิศวกรรมไฟฟ้าสื่อสาร" },
@@ -44,6 +51,18 @@ export default function Navbar() {
             setUserId(data.data.userid);
             setBlood(data.data.blood);
             setMajor(data.data.major);
+            setIsAdmin(data.data.admin || false);
+            
+            // เซ็ต user object สำหรับ permission system
+            setUser({
+              id: data.data.id,
+              realname: data.data.realname,
+              userid: data.data.userid,
+              username: data.data.username,
+              role: data.data.role || 'student',
+              admin: data.data.admin || false,
+              ...data.data
+            });
             if (data.data.profileImage) {
               setProfileImage(`data:image/jpeg;base64,${data.data.profileImage}`);
             } else {
@@ -119,6 +138,9 @@ export default function Navbar() {
       </div>
 
       <div className="flex items-center space-x-2">
+        {/* User Search */}
+        <UserSearch />
+        
         {/* Gun/Behavior Menu */}
         <div ref={gunBehaviorRef} className="relative">
           <button className="btn btn-ghost" onClick={toggleGunBehaviorMenu}>
@@ -131,11 +153,33 @@ export default function Navbar() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
                 transition={{ duration: 0.18 }}
-                className="absolute right-0 mt-2 w-48 bg-white border border-gray-300 rounded shadow-md z-50 dropdown-content show"
+                className="absolute right-0 mt-2 w-56 bg-white border border-gray-300 rounded shadow-md z-50 dropdown-content show"
               >
-                <p className="block px-4 py-2 text-black cursor-pointer hover:bg-gray-200" onClick={() => { setShowGunBehaviorMenu(false); navigate('/gun-borrowing'); }}>เบิก / คืน อาวุธปืน</p>
-                <p className="block px-4 py-2 text-black cursor-pointer hover:bg-gray-200" onClick={() => { setShowGunBehaviorMenu(false); navigate('/behavior-point'); }}>ตัดคะแนนความประพฤติ</p>
-                <p className="block px-4 py-2 text-black cursor-pointer hover:bg-gray-200" onClick={() => { setShowGunBehaviorMenu(false); navigate('/summary'); }}>เช็คใบยอด</p>
+                {menuItems
+                  .filter(item => item.path !== '/' && item.path !== '/profile') // ไม่แสดงหน้าหลักและโปรไฟล์
+                  .map((item, index) => (
+                    <p
+                      key={`menu-${item.path}-${index}`} // ป้องกัน duplicate key
+                      className={`block px-4 py-2 text-black cursor-pointer hover:bg-gray-200 ${
+                        item.path === '/role-manager' ? 'font-semibold border-t border-gray-200' : ''
+                      }`}
+                      onClick={() => {
+                        setShowGunBehaviorMenu(false);
+                        navigate(item.path);
+                      }}
+                    >
+                      {item.icon && <span className="mr-2">{item.icon}</span>}
+                      {item.label}
+                    </p>
+                  ))
+                }
+                
+                {/* แสดงข้อความถ้าไม่มีเมนู */}
+                {menuItems.filter(item => item.path !== '/' && item.path !== '/profile').length === 0 && (
+                  <p className="block px-4 py-2 text-gray-500 text-center">
+                    ไม่มีเมนูเพิ่มเติม
+                  </p>
+                )}
               </motion.div>
             )}
           </AnimatePresence>

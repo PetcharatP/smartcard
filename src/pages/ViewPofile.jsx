@@ -90,7 +90,9 @@ export default function ViewProfile() {
 
     const generateGunQRCode = async (gunNumber) => {
         try {
-            const qrCodeUrl = await QRCode.toDataURL(gunNumber, { width: 60 });
+            // เพิ่ม prefix "GUN-" ก่อนหมายเลขปืนเพื่อให้ระบบตรวจจับได้ชัดเจน
+            const gunQRData = `GUN-${gunNumber}`;
+            const qrCodeUrl = await QRCode.toDataURL(gunQRData, { width: 60 });
             setGunQrCodeImage(qrCodeUrl);
         } catch (error) {
             console.error('Error generating Gun QR Code:', error);
