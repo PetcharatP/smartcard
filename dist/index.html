@@ -4,11 +4,142 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Smartcard Management System</title>
-    <script type="module" crossorigin src="/assets/index-630560d5.js"></script>
-    <link rel="stylesheet" href="/assets/index-a52b9f62.css">
+    
+    <!-- Favicon และ Icons -->
+    <link rel="icon" type="image/png" href="/logo.png">
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/logo.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/logo.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    
+    <!-- Meta tags สำหรับ SEO และ Social Media -->
+    <meta name="description" content="ระบบจัดการบัตรสมาร์ทการ์ด - Smartcard Management System">
+    <meta name="keywords" content="smartcard, management, system, บัตรสมาร์ทการ์ด, ระบบจัดการ">
+    <meta name="author" content="C R M A">
+    
+    <!-- Open Graph Meta Tags for Social Media -->
+    <meta property="og:title" content="Smartcard Management System">
+    <meta property="og:description" content="ระบบจัดการบัตรสมาร์ทการ์ด - CRMA">
+    <meta property="og:image" content="/logo.png">
+    <meta property="og:type" content="website">
+    
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#2563eb">
+    
+    <style>
+      /* Loading Screen Styles */
+      #loading-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #d8ac1a 0%, #e90606 100%);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        color: white;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      }
+      
+      .logo-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 2rem;
+      }
+      
+      .site-logo {
+        width: 120px;
+        height: 120px;
+        background: white;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        animation: logoFloat 3s ease-in-out infinite;
+        overflow: hidden;
+      }
+      
+      .site-logo img {
+        width: 80px;
+        height: 80px;
+        -o-object-fit: contain;
+           object-fit: contain;
+      }
+      
+      .site-title {
+        font-size: 1.8rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        text-align: center;
+      }
+      
+      .site-subtitle {
+        font-size: 1rem;
+        opacity: 0.8;
+        text-align: center;
+      }
+      
+      .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-top: 3px solid white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-top: 2rem;
+      }
+      
+      @keyframes logoFloat {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+      }
+      
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      
+      #loading-screen.fade-out {
+        opacity: 0;
+        transition: opacity 0.5s ease-out;
+      }
+    </style>
+    <script type="module" crossorigin src="/assets/index-1eab1cfd.js"></script>
+    <link rel="stylesheet" href="/assets/index-4c9638d4.css">
   </head>
   <body>
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+      <div class="logo-container">
+        <div class="site-logo">
+          <img src="/logo.png" alt="CRMA Logo" />
+        </div>
+        <div class="site-title">C R M A</div>
+        <div class="site-subtitle">Smartcard Management System</div>
+      </div>
+      <div class="loading-spinner"></div>
+    </div>
+    
     <div id="root"></div>
     
+    
+    <script>
+      // Hide loading screen when page is loaded
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          const loadingScreen = document.getElementById('loading-screen');
+          loadingScreen.classList.add('fade-out');
+          setTimeout(function() {
+            loadingScreen.style.display = 'none';
+          }, 500);
+        }, 1000); // Show loading for at least 1 second
+      });
+    </script>
   </body>
 </html>

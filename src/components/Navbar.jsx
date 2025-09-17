@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import logo from '../pic/logo.jpeg';
 import './Navbar.css';
 import { VscAccount, VscThreeBars } from "react-icons/vsc";
 import { motion, AnimatePresence } from 'framer-motion';
 import UserSearch from './UserSearch';
 import { getMenuItems, hasPermission, PERMISSIONS } from '../utils/permissions';
+import logo from '../pic/logo.png';
 
 export default function Navbar() {
   const [realname, setRealname] = useState('');
