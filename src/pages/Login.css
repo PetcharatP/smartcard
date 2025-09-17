@@ -5,8 +5,8 @@ body {
   background: #e0e5ec;
   display: flex;
   justify-content: center;
-  align-items: flex-start;
-  height: 100vh;
+  align-items: flex-start;/* Responsive for mobile */
+  min-height: 100vh;
 }
 
 /* Login page with Home-like design pattern */
@@ -14,7 +14,7 @@ body {
   min-height: 100vh;
   padding: 2rem;
   background: #e0e5ec;
-  padding-top: 80px;
+  padding-top: 1px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -176,7 +176,7 @@ select option {
 @media (max-width: 768px) {
   .login-bg {
     padding: 1rem;
-    padding-top: 70px;
+    padding-top: 1px;
   }
   
   .container {
@@ -208,7 +208,7 @@ select option {
 @media (max-width: 600px) {
   .login-bg {
     padding: 0.75rem;
-    padding-top: 65px;
+    padding-top: 1px;
   }
   
   .container {
@@ -244,7 +244,7 @@ select option {
 @media (max-width: 480px) {
   .login-bg {
     padding: 0.5rem;
-    padding-top: 60px;
+    padding-top: 1px;
   }
   
   .container {

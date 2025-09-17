@@ -19,8 +19,8 @@
     overflow: visible;
 }
 
-/* Add space below navbar for page content */
-body, #root {
+/* Add space below navbar for page content only when navbar is present */
+body.has-navbar, #root.has-navbar {
     padding-top: 72px;
 }
 
@@ -206,7 +206,7 @@ body, #root {
         margin-bottom: 8px;
     }
     
-    body, #root {
+    body.has-navbar, #root.has-navbar {
         padding-top: 64px;
     }
 }
@@ -241,7 +241,7 @@ body, #root {
         margin-bottom: 6px;
     }
     
-    body, #root {
+    body.has-navbar, #root.has-navbar {
         padding-top: 60px;
     }
 }
@@ -272,7 +272,7 @@ body, #root {
         margin-bottom: 4px;
     }
     
-    body, #root {
+    body.has-navbar, #root.has-navbar {
         padding-top: 56px;
     }
 }

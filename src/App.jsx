@@ -14,6 +14,7 @@ import Navbar from './components/Navbar';
 import Summary from './pages/Summary.jsx';
 import RoleManager from './pages/RoleManager.jsx';
 import { withPermission } from './components/PermissionWrapper';
+import { useEffect } from 'react';
 
 // ห่อ components ด้วย permission wrapper
 const ProtectedDeductPoint = withPermission(DeductPoint, 'deduct-point');
@@ -24,11 +25,31 @@ const ProtectedSummary = withPermission(Summary, 'summary');
 
 function AppContent() {
   const location = useLocation();
-  const hideNavbar = location.pathname === '/login' || location.pathname === '/register';
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
+
+  // เพิ่มหรือลบ class has-navbar จาก body และ root
+  useEffect(() => {
+    const body = document.body;
+    const root = document.getElementById('root');
+    
+    if (!isAuthPage) {
+      body.classList.add('has-navbar');
+      root.classList.add('has-navbar');
+    } else {
+      body.classList.remove('has-navbar');
+      root.classList.remove('has-navbar');
+    }
+    
+    // Clean up เมื่อ component unmount
+    return () => {
+      body.classList.remove('has-navbar');
+      root.classList.remove('has-navbar');
+    };
+  }, [isAuthPage]);
 
   return (
     <>
-      {!hideNavbar && <Navbar />}
+      {!isAuthPage && <Navbar />}
       <Routes>
         <Route path="/" element={
           <ProtectedRoute>

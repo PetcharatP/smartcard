@@ -52,11 +52,26 @@ export default function Summary() {
   // ดึงใบยอดทั้งหมด (ที่ยังไม่มีการลงยอดจำหน่าย)
   useEffect(() => {
     console.log('API URL:', apiUrl);
-    fetch(`/api/summary`)
+    const token = localStorage.getItem('token');
+    
+    fetch(`/api/summary`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
       .then(res => res.json())
       .then(data => {
-        setSummaries(data.data || []);
+        if (data.success || data.status !== false) {
+          setSummaries(data.data || []);
+        } else {
+          console.error('Failed to fetch summaries:', data.message);
+          showMessage(data.message || 'ไม่สามารถดึงข้อมูลสรุปยอดได้', 'error');
+        }
         // ยังไม่กรอง userSummaries ตอนนี้ เดี๋ยวจะกรองใน useEffect อีกอันหลังจากได้ข้อมูล user
+      })
+      .catch(error => {
+        console.error('Error fetching summaries:', error);
+        showMessage('เกิดข้อผิดพลาดในการดึงข้อมูล', 'error');
       });
   }, []);
 
@@ -225,9 +240,13 @@ export default function Summary() {
     };
     
     try {
+      const token = localStorage.getItem('token');
       const res = await fetch(`/api/summary?id=${summary.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           ...summary,
           other: otherObj
@@ -239,7 +258,12 @@ export default function Summary() {
         setUserSummarySelect('');
         setUserOtherChecked(null);
         // รีเฟรชข้อมูล
-        fetch(`/api/summary`)
+        const token = localStorage.getItem('token');
+        fetch(`/api/summary`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
           .then(res => res.json())
           .then(data => {
             setSummaries(data.data || []);
@@ -337,7 +361,13 @@ export default function Summary() {
 
   const handleDelete = async id => {
     if (window.confirm('ต้องการลบข้อมูลนี้ใช่หรือไม่?')) {
-      await fetch(`/api/summary?id=${id}`, { method: 'DELETE' });
+      const token = localStorage.getItem('token');
+      await fetch(`/api/summary?id=${id}`, { 
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       setSummaries(summaries => summaries.filter(item => item.id !== id));
     }
   };
@@ -399,9 +429,13 @@ export default function Summary() {
     };
     
     try {
+      const token = localStorage.getItem('token');
       const res = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify(bodyData)
       });
       const data = await res.json();
@@ -478,9 +512,13 @@ export default function Summary() {
     }
 
     // อัปเดตไปยัง backend
+    const token = localStorage.getItem('token');
     await fetch(`/api/summary?id=${summaryId}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
       body: JSON.stringify({
         ...summary,
         other: obj
