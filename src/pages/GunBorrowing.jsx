@@ -939,8 +939,8 @@ export default function GunBorrowing() {
                                     </tr>
                                 ) : (
                                     publicGuns.map(gun => (
-                                        <tr key={gun.gunQRCode}>
-                                            <td>{gun.gunQRCode}</td>
+                                        <tr key={gun.gunId}>
+                                            <td>{gun.gunId}</td>
                                             <td>
                                                 <button
                                                     type="button"
@@ -952,7 +952,7 @@ export default function GunBorrowing() {
                                                         padding: "4px 12px",
                                                         cursor: "pointer"
                                                     }}
-                                                    onClick={() => handleDeletePublicGun(gun.gunQRCode)}
+                                                    onClick={() => handleDeletePublicGun(gun.gunId)}
                                                 >
                                                     ลบ
                                                 </button>

@@ -1,0 +1,5 @@
+.dashboard-page .card { background: #fff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+.dashboard-page .input, .dashboard-page .textarea { width: 100%; padding: 8px 10px; border: 1px solid #e5e7eb; border-radius: 6px; }
+.dashboard-page .textarea { min-height: 100px; }
+.dashboard-page .btn-primary { background: #2563eb; color: #fff; padding: 8px 12px; border-radius: 6px; }
+.dashboard-page .btn-primary:disabled { opacity: 0.6 }

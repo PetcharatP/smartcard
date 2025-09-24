@@ -135,6 +135,8 @@ export default function Navbar() {
           <img src={logo} alt="Logo" className="logo-img" />
           <span className="ml-2">CRMA</span>
         </span>
+        {/* Dashboard link after logo */}
+        <button className="btn btn-ghost ml-3 text-sm" onClick={() => navigate('/dashboard')}>Dashboard</button>
       </div>
 
       <div className="flex items-center space-x-2">
@@ -153,7 +155,7 @@ export default function Navbar() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
                 transition={{ duration: 0.18 }}
-                className="absolute right-0 mt-2 w-56 bg-white border border-gray-300 rounded shadow-md z-50 dropdown-content show"
+                className="dropdown-content show"
               >
                 {menuItems
                   .filter(item => item.path !== '/' && item.path !== '/profile') // ไม่แสดงหน้าหลักและโปรไฟล์
@@ -197,7 +199,7 @@ export default function Navbar() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
                 transition={{ duration: 0.18 }}
-                className="dropdown-content show absolute right-0 mt-2 w-52 bg-white border border-gray-300 rounded shadow-md z-50 p-4"
+                className="dropdown-content show"
               >
                 {profileImage ? (
                   <img src={profileImage} alt="Profile" className="dropdown-profile-img mb-2 rounded-full w-16 h-16 object-cover mx-auto" />

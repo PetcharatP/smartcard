@@ -575,7 +575,10 @@ function NewPostForm({
               padding: '24px',
               boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
               border: '1px solid #f1f5f9',
-              marginBottom: '24px'
+              marginBottom: '24px',
+              boxSizing: 'border-box',
+              maxWidth: '100%',
+              overflow: 'hidden'
             }}
           >
             <div style={{ marginBottom: '16px' }}>
@@ -593,7 +596,8 @@ function NewPostForm({
                   fontWeight: '500',
                   outline: 'none',
                   transition: 'all 0.2s ease',
-                  background: '#fafafa'
+                  background: '#fafafa',
+                  boxSizing: 'border-box'
                 }}
                 onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
                 onBlur={(e) => e.target.style.borderColor = '#f1f5f9'}
@@ -619,7 +623,9 @@ function NewPostForm({
                   fontFamily: 'inherit',
                   lineHeight: '1.6',
                   background: '#fafafa',
-                  transition: 'all 0.2s ease'
+                  transition: 'all 0.2s ease',
+                  boxSizing: 'border-box',
+                  overflow: 'auto'
                 }}
                 onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
                 onBlur={(e) => e.target.style.borderColor = '#f1f5f9'}
@@ -854,7 +860,10 @@ function NewPostForm({
                 padding: '16px',
                 background: '#f8fafc',
                 borderRadius: '12px',
-                border: '1px solid #e2e8f0'
+                border: '1px solid #e2e8f0',
+                boxSizing: 'border-box',
+                maxWidth: '100%',
+                overflow: 'hidden'
               }}>
                 {imageBase64List.map((imgSrc, idx) => (
                   <div key={idx} style={{ position: 'relative' }}>
@@ -1062,6 +1071,8 @@ export default function Home() {
           } else if (data.data.avatar) {
             setUserAvatarUrl(data.data.avatar);
           }
+          // เพิ่มบันทึก user ลง localStorage เพื่อให้ Dashboard ใช้งานข้อมูล battalion ได้
+          localStorage.setItem('user', JSON.stringify(data.data));
         } else {
           localStorage.removeItem('token');
           navigate('/login');
@@ -1476,21 +1487,37 @@ export default function Home() {
                       borderTop: '1px solid #f1f5f9'
                     }}>
                       <div style={{ 
-                        fontSize: '14px',
-                        color: '#6b7280',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px'
-                      }}>
-                        <span style={{ 
-                          background: '#f3f4f6',
-                          padding: '4px 8px',
-                          borderRadius: '6px',
-                          fontWeight: '500'
-                        }}>
-                          {post.postedBy}
-                        </span>
-                      </div>
+                                    fontSize: '14px',
+                                    color: '#6b7280',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px'
+                                  }}>
+                                    <span style={{ 
+                                      background: '#f3f4f6',
+                                      padding: '4px 8px',
+                                      borderRadius: '6px',
+                                      fontWeight: '500',
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '8px'
+                                    }}>
+                                      <span>{post.postedBy}</span>
+                                      {post.postedYear && (
+                                        <small style={{
+                                          background: '#eef2ff',
+                                          color: '#3730a3',
+                                          padding: '2px 6px',
+                                          borderRadius: '6px',
+                                          fontSize: '12px',
+                                          fontWeight: 600,
+                                          marginLeft: '5px' // เพิ่มระยะห่างระหว่างชื่อกับชั้นปี
+                                        }}>
+                                          {`ชั้นปี ${post.postedYear}`}
+                                        </small>
+                                      )}
+                                    </span>
+                                  </div>
                       
                       <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                         {/* Like Button */}
