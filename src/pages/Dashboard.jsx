@@ -304,17 +304,18 @@ export default function Dashboard() {
                 className="btn-primary"
                 style={{
                   width: '100%',
+                  maxWidth: 180,
                   fontWeight: 600,
                   fontSize: 16,
                   boxShadow: '0 2px 8px #2563eb22',
                   borderRadius: 10,
-                  padding: '12px 0',
-                  minWidth: 120,
+                  padding: '10px 0',
                   background: isSubmitting ? '#e2e8f0' : '#2563eb',
                   color: isSubmitting ? '#94a3b8' : 'white',
                   cursor: isSubmitting ? 'not-allowed' : 'pointer',
                   border: 'none',
                   transition: 'all 0.2s',
+                  margin: '0 auto'
                 }}
               >
                 {isSubmitting ? 'กำลังบันทึก...' : 'บันทึกข้อมูล'}
@@ -324,17 +325,18 @@ export default function Dashboard() {
                 className="btn-secondary"
                 style={{
                   width: '100%',
+                  maxWidth: 180,
                   marginTop: 0,
                   fontWeight: 500,
                   fontSize: 15,
                   borderRadius: 10,
-                  padding: '12px 0',
-                  minWidth: 120,
+                  padding: '10px 0',
                   background: '#f3f4f6',
                   color: '#374151',
                   border: '2px solid #e2e8f0',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
+                  margin: '0 auto'
                 }}
                 onClick={() => { setShowForm(false); setError(''); setSuccess(''); }}
               >
