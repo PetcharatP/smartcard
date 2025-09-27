@@ -136,7 +136,7 @@ export default function Navbar() {
           <span className="ml-2">CRMA</span>
         </span>
         {/* Dashboard link after logo */}
-        <button className="btn btn-ghost ml-3 text-sm" onClick={() => navigate('/dashboard')}>Dashboard</button>
+        <button className="btn btn-ghost ml-3 text-sm" onClick={() => navigate('/dashboard')}>Information</button>
       </div>
 
       <div className="flex items-center space-x-2">

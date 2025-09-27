@@ -132,7 +132,7 @@ export default function Dashboard() {
         gap: 16
       }}>
         <div style={{minWidth: 200}}>
-          <h1 style={{color:'#2563eb', fontWeight:700, fontSize:'2.2rem', margin:0}}>Dashboard</h1>
+          <h1 style={{color:'#2563eb', fontWeight:700, fontSize:'2.2rem', margin:0}}>ข่าวสาร / ภารกิจของ นนร.</h1>
           <div style={{color:'#666', fontSize:'1.1rem'}}>สร้างและดูรายการ Dashboard ของคุณได้ที่นี่</div>
         </div>
         <button
@@ -190,11 +190,11 @@ export default function Dashboard() {
               </select>
             </div>
             <div style={{flex:'1 1 180px', minWidth:140, width:'100%'}}>
-              <label style={{fontSize:13, color:'#444'}}>เวลาเริ่ม (วัน+เวลา)</label>
+              <label style={{fontSize:13, color:'#444'}}>เวลาเริ่มภารกิจ (วัน+เวลา)</label>
               <input type="datetime-local" value={startDateTime} onChange={e=>setStartDateTime(e.target.value)} required className="input" style={{width:'100%'}} />
             </div>
             <div style={{flex:'1 1 180px', minWidth:140, width:'100%'}}>
-              <label style={{fontSize:13, color:'#444'}}>เวลาสิ้นสุด (วัน+เวลา)</label>
+              <label style={{fontSize:13, color:'#444'}}>เวลาสิ้นสุดภารกิจ (วัน+เวลา)</label>
               <input type="datetime-local" value={endDateTime} onChange={e=>setEndDateTime(e.target.value)} required className="input" style={{width:'100%'}} />
             </div>
             <div style={{display:'flex', flexDirection:'column', gap:8, minWidth:120, width:'100%'}}>
