@@ -8,6 +8,10 @@ export default function Dashboard() {
   const [battalion, setBattalion] = useState('');
   const [startDateTime, setStartDateTime] = useState('');
   const [endDateTime, setEndDateTime] = useState('');
+  const [responsible, setResponsible] = useState('');
+  const [operator, setOperator] = useState('');
+  const [dress, setDress] = useState('');
+  const [location, setLocation] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -61,7 +65,6 @@ export default function Dashboard() {
       const date = startDateTime ? startDateTime.slice(0,10) : new Date().toISOString().slice(0,10);
       const company = user.company || '';
       const sender = user.realname || user.username || '';
-      const note = content;
       // ถ้าไม่ได้เลือก battalion ให้ส่งเป็นค่าว่าง (ทุกกองพันเห็น)
       const battalionValue = battalion || '';
       const res = await fetch('/api/dashboard', {
@@ -72,12 +75,16 @@ export default function Dashboard() {
         },
         body: JSON.stringify({
           title,
-          date,
+          content,
+          responsible,
+          operator,
+          dress,
+          location,
+          startDateTime,
+          endDateTime,
           battalion: battalionValue,
           company,
-          sender,
-          note,
-          endDateTime
+          sender
         })
       });
       const json = await res.json();
@@ -85,6 +92,10 @@ export default function Dashboard() {
         setSuccess('สร้างข้อมูลสำเร็จ');
         setTitle('');
         setContent('');
+        setResponsible('');
+        setOperator('');
+        setDress('');
+        setLocation('');
         setBattalion('');
         setStartDateTime('');
         setEndDateTime('');
@@ -174,7 +185,7 @@ export default function Dashboard() {
               <input
                 value={title}
                 onChange={e => setTitle(e.target.value)}
-                placeholder="หัวข้อข่าว (ไม่บังคับ)"
+                placeholder="หัวข้อ"
                 required
                 style={{
                   width: '100%',
@@ -198,7 +209,7 @@ export default function Dashboard() {
               <textarea
                 value={content}
                 onChange={e => setContent(e.target.value)}
-                placeholder="เขียนข่าวสาร..."
+                placeholder="รายละเอียด"
                 className="input"
                 style={{
                   width: '100%',
@@ -217,6 +228,94 @@ export default function Dashboard() {
                   whiteSpace: 'pre-line',
                   boxSizing: 'border-box',
                   marginBottom: 0
+                }}
+                onFocus={e => e.target.style.borderColor = '#3b82f6'}
+                onBlur={e => e.target.style.borderColor = '#f1f5f9'}
+              />
+            </div>
+            <div style={{ width: '100%', maxWidth: 420 }}>
+              <label style={{ fontSize: 14, color: '#374151', fontWeight: 500, marginBottom: 6, display: 'block' }}>ผู้รับผิดชอบ</label>
+              <input
+                value={responsible}
+                onChange={e => setResponsible(e.target.value)}
+                placeholder="ผู้รับผิดชอบ"
+                style={{
+                  width: '100%',
+                  maxWidth: 420,
+                  padding: '12px 16px',
+                  border: '2px solid #f1f5f9',
+                  borderRadius: '12px',
+                  fontSize: '16px',
+                  outline: 'none',
+                  background: '#fafafa',
+                  marginBottom: 0,
+                  transition: 'all 0.2s',
+                }}
+                onFocus={e => e.target.style.borderColor = '#3b82f6'}
+                onBlur={e => e.target.style.borderColor = '#f1f5f9'}
+              />
+            </div>
+            <div style={{ width: '100%', maxWidth: 420 }}>
+              <label style={{ fontSize: 14, color: '#374151', fontWeight: 500, marginBottom: 6, display: 'block' }}>ผู้ปฏิบัติ</label>
+              <input
+                value={operator}
+                onChange={e => setOperator(e.target.value)}
+                placeholder="ผู้ปฏิบัติ"
+                style={{
+                  width: '100%',
+                  maxWidth: 420,
+                  padding: '12px 16px',
+                  border: '2px solid #f1f5f9',
+                  borderRadius: '12px',
+                  fontSize: '16px',
+                  outline: 'none',
+                  background: '#fafafa',
+                  marginBottom: 0,
+                  transition: 'all 0.2s',
+                }}
+                onFocus={e => e.target.style.borderColor = '#3b82f6'}
+                onBlur={e => e.target.style.borderColor = '#f1f5f9'}
+              />
+            </div>
+            <div style={{ width: '100%', maxWidth: 420 }}>
+              <label style={{ fontSize: 14, color: '#374151', fontWeight: 500, marginBottom: 6, display: 'block' }}>การแต่งกาย</label>
+              <input
+                value={dress}
+                onChange={e => setDress(e.target.value)}
+                placeholder="การแต่งกาย"
+                style={{
+                  width: '100%',
+                  maxWidth: 420,
+                  padding: '12px 16px',
+                  border: '2px solid #f1f5f9',
+                  borderRadius: '12px',
+                  fontSize: '16px',
+                  outline: 'none',
+                  background: '#fafafa',
+                  marginBottom: 0,
+                  transition: 'all 0.2s',
+                }}
+                onFocus={e => e.target.style.borderColor = '#3b82f6'}
+                onBlur={e => e.target.style.borderColor = '#f1f5f9'}
+              />
+            </div>
+            <div style={{ width: '100%', maxWidth: 420 }}>
+              <label style={{ fontSize: 14, color: '#374151', fontWeight: 500, marginBottom: 6, display: 'block' }}>สถานที่</label>
+              <input
+                value={location}
+                onChange={e => setLocation(e.target.value)}
+                placeholder="สถานที่"
+                style={{
+                  width: '100%',
+                  maxWidth: 420,
+                  padding: '12px 16px',
+                  border: '2px solid #f1f5f9',
+                  borderRadius: '12px',
+                  fontSize: '16px',
+                  outline: 'none',
+                  background: '#fafafa',
+                  marginBottom: 0,
+                  transition: 'all 0.2s',
                 }}
                 onFocus={e => e.target.style.borderColor = '#3b82f6'}
                 onBlur={e => e.target.style.borderColor = '#f1f5f9'}
@@ -385,18 +484,32 @@ export default function Dashboard() {
         return (
           <div>
             {sortedDates.map(date => {
-              // แปลงวันที่เป็นรูปแบบ 24 ก.ย. 68
+              // ถ้า date เป็น '-' ให้ใช้ startDateTime ของ entry แรกในกลุ่ม
               let dateLabel = '-';
-              try {
-                const d = new Date(date);
-                if (!isNaN(d)) {
-                  const day = d.getDate();
-                  const monthNames = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-                  const month = monthNames[d.getMonth()];
-                  const year = d.getFullYear() > 2500 ? d.getFullYear() - 2500 : d.getFullYear() - 2000;
-                  dateLabel = `${day} ${month} ${year}`;
+              if (date === '-') {
+                const firstEntry = groups[date][0];
+                if (firstEntry && firstEntry.startDateTime) {
+                  const d = new Date(firstEntry.startDateTime);
+                  if (!isNaN(d)) {
+                    const day = d.getDate();
+                    const monthNames = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+                    const month = monthNames[d.getMonth()];
+                    const year = d.getFullYear() > 2500 ? d.getFullYear() - 2500 : d.getFullYear() - 2000;
+                    dateLabel = `${day} ${month} ${year}`;
+                  }
                 }
-              } catch {}
+              } else {
+                try {
+                  const d = new Date(date);
+                  if (!isNaN(d)) {
+                    const day = d.getDate();
+                    const monthNames = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+                    const month = monthNames[d.getMonth()];
+                    const year = d.getFullYear() > 2500 ? d.getFullYear() - 2500 : d.getFullYear() - 2000;
+                    dateLabel = `${day} ${month} ${year}`;
+                  }
+                } catch {}
+              }
               return (
                 <div key={date} style={{marginBottom:32, border:'1px solid #e5e7eb', borderRadius:12, background:'#fafbff'}}>
                   <div style={{fontWeight:700, fontSize:'1.2rem', color:'#2563eb', padding:'12px 0 0 18px'}}>{dateLabel}</div>
@@ -411,8 +524,24 @@ export default function Dashboard() {
                         <li key={e.id} className="card" style={{margin:'16px 0', padding:'18px 16px', border:'none', boxShadow:'none', background:'transparent'}}>
                           {/* Title เป็นหัวข้อ */}
                           <div style={{fontWeight:'bold', fontSize:'1.18rem', color:'#222', marginBottom:2}}>{e.title || 'ไม่มี'}</div>
-                          {/* Note เป็นรายละเอียด */}
-                          <div style={{color:'#555', fontSize:'1rem', marginBottom:2, whiteSpace:'pre-line'}}>{e.note || 'หัวข้อ'}</div>
+                          {/* Content เป็นรายละเอียด */}
+                          <div style={{color:'#555', fontSize:'1rem', marginBottom:6, whiteSpace:'pre-line'}}>{e.content || 'ไม่มีรายละเอียด'}</div>
+                          {/* Responsible */}
+                          <div style={{fontSize:13, color:'#666', marginBottom:2}}>
+                            <span>ผู้รับผิดชอบ: {e.responsible || '-'}</span>
+                          </div>
+                          {/* Operator */}
+                          <div style={{fontSize:13, color:'#666', marginBottom:2}}>
+                            <span>ผู้ปฏิบัติ: {e.operator || '-'}</span>
+                          </div>
+                          {/* Dress */}
+                          <div style={{fontSize:13, color:'#666', marginBottom:2}}>
+                            <span>การแต่งกาย: {e.dress || '-'}</span>
+                          </div>
+                          {/* Location */}
+                          <div style={{fontSize:13, color:'#666', marginBottom:2}}>
+                            <span>สถานที่: {e.location || '-'}</span>
+                          </div>
                           {/* กองพัน */}
                           <div style={{fontSize:13, color:'#666', marginBottom:2}}>
                             <span>กองพัน: {e.battalion ? String(e.battalion) : '-'}</span>
