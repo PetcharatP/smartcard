@@ -62,8 +62,8 @@ export default function Dashboard() {
       const company = user.company || '';
       const sender = user.realname || user.username || '';
       const note = content;
-      // ใช้ค่าจาก dropdown หรือ user.battalion ถ้าไม่ได้เลือก
-      const battalionValue = battalion || user.battalion || '';
+      // ถ้าไม่ได้เลือก battalion ให้ส่งเป็นค่าว่าง (ทุกกองพันเห็น)
+      const battalionValue = battalion || '';
       const res = await fetch('/api/dashboard', {
         method: 'POST',
         headers: {
@@ -158,29 +158,91 @@ export default function Dashboard() {
           <form
             onSubmit={handleCreate}
             style={{
-              display:'flex',
-              flexWrap:'wrap',
-              gap:16,
-              alignItems:'flex-end',
-              rowGap:24
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 18,
+              background: 'white',
+              borderRadius: '16px',
+              padding: '18px 0',
+              boxSizing: 'border-box',
+              maxWidth: '100%',
+              alignItems: 'center'
             }}
           >
-            <div style={{flex:'1 1 180px', minWidth:140, width:'100%'}}>
-              <label style={{fontSize:13, color:'#444'}}>หัวข้อ</label>
-              <input value={title} onChange={e=>setTitle(e.target.value)} placeholder="Title" required className="input" style={{width:'100%'}} />
+            <div style={{ width: '100%', maxWidth: 420 }}>
+              <label style={{ fontSize: 14, color: '#374151', fontWeight: 500, marginBottom: 6, display: 'block' }}>หัวข้อ</label>
+              <input
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                placeholder="หัวข้อข่าว (ไม่บังคับ)"
+                required
+                style={{
+                  width: '100%',
+                  maxWidth: 420,
+                  padding: '12px 16px',
+                  border: '2px solid #f1f5f9',
+                  borderRadius: '12px',
+                  fontSize: '16px',
+                  fontWeight: '500',
+                  outline: 'none',
+                  background: '#fafafa',
+                  marginBottom: 0,
+                  transition: 'all 0.2s',
+                }}
+                onFocus={e => e.target.style.borderColor = '#3b82f6'}
+                onBlur={e => e.target.style.borderColor = '#f1f5f9'}
+              />
             </div>
-            <div style={{flex:'2 1 260px', minWidth:140, width:'100%'}}>
-              <label style={{fontSize:13, color:'#444'}}>รายละเอียด</label>
-              <input value={content} onChange={e=>setContent(e.target.value)} placeholder="Content" className="input" style={{width:'100%'}} />
+            <div style={{ width: '100%', maxWidth: 420 }}>
+              <label style={{ fontSize: 14, color: '#374151', fontWeight: 500, marginBottom: 6, display: 'block' }}>รายละเอียด</label>
+              <textarea
+                value={content}
+                onChange={e => setContent(e.target.value)}
+                placeholder="เขียนข่าวสาร..."
+                className="input"
+                style={{
+                  width: '100%',
+                  maxWidth: 420,
+                  padding: '16px',
+                  border: '2px solid #f1f5f9',
+                  borderRadius: '12px',
+                  fontSize: '16px',
+                  outline: 'none',
+                  resize: 'vertical',
+                  minHeight: '100px',
+                  fontFamily: 'inherit',
+                  lineHeight: '1.6',
+                  background: '#fafafa',
+                  transition: 'all 0.2s',
+                  whiteSpace: 'pre-line',
+                  boxSizing: 'border-box',
+                  marginBottom: 0
+                }}
+                onFocus={e => e.target.style.borderColor = '#3b82f6'}
+                onBlur={e => e.target.style.borderColor = '#f1f5f9'}
+              />
             </div>
-            <div style={{flex:'1 1 180px', minWidth:140, width:'100%'}}>
-              <label style={{fontSize:13, color:'#444'}}>กองพัน</label>
+            <div style={{ width: '100%', maxWidth: 420 }}>
+              <label style={{ fontSize: 14, color: '#374151', fontWeight: 500, marginBottom: 6, display: 'block' }}>กองพัน</label>
               <select
                 value={battalion}
                 onChange={e => setBattalion(e.target.value)}
-                required
-                className="input"
-                style={{width:'100%'}}
+        // ไม่ required
+                style={{
+                  width: '100%',
+                  maxWidth: 420,
+                  padding: '12px 16px',
+                  border: '2px solid #f1f5f9',
+                  borderRadius: '12px',
+                  fontSize: '16px',
+                  fontWeight: '500',
+                  outline: 'none',
+                  background: '#fafafa',
+                  marginBottom: 0,
+                  transition: 'all 0.2s',
+                }}
+                onFocus={e => e.target.style.borderColor = '#3b82f6'}
+                onBlur={e => e.target.style.borderColor = '#f1f5f9'}
               >
                 <option value="">เลือกกองพัน</option>
                 <option value="1">1</option>
@@ -189,28 +251,92 @@ export default function Dashboard() {
                 <option value="4">4</option>
               </select>
             </div>
-            <div style={{flex:'1 1 180px', minWidth:140, width:'100%'}}>
-              <label style={{fontSize:13, color:'#444'}}>เวลาเริ่มภารกิจ (วัน+เวลา)</label>
-              <input type="datetime-local" value={startDateTime} onChange={e=>setStartDateTime(e.target.value)} required className="input" style={{width:'100%'}} />
+            <div style={{ width: '100%', maxWidth: 420 }}>
+              <label style={{ fontSize: 14, color: '#374151', fontWeight: 500, marginBottom: 6, display: 'block' }}>เวลาเริ่มภารกิจ (วัน+เวลา)</label>
+              <input
+                type="datetime-local"
+                value={startDateTime}
+                onChange={e => setStartDateTime(e.target.value)}
+                required
+                style={{
+                  width: '100%',
+                  maxWidth: 420,
+                  padding: '12px 16px',
+                  border: '2px solid #f1f5f9',
+                  borderRadius: '12px',
+                  fontSize: '16px',
+                  outline: 'none',
+                  background: '#fafafa',
+                  marginBottom: 0,
+                  transition: 'all 0.2s',
+                }}
+                onFocus={e => e.target.style.borderColor = '#3b82f6'}
+                onBlur={e => e.target.style.borderColor = '#f1f5f9'}
+              />
             </div>
-            <div style={{flex:'1 1 180px', minWidth:140, width:'100%'}}>
-              <label style={{fontSize:13, color:'#444'}}>เวลาสิ้นสุดภารกิจ (วัน+เวลา)</label>
-              <input type="datetime-local" value={endDateTime} onChange={e=>setEndDateTime(e.target.value)} required className="input" style={{width:'100%'}} />
+            <div style={{ width: '100%', maxWidth: 420 }}>
+              <label style={{ fontSize: 14, color: '#374151', fontWeight: 500, marginBottom: 6, display: 'block' }}>เวลาสิ้นสุดภารกิจ (วัน+เวลา)</label>
+              <input
+                type="datetime-local"
+                value={endDateTime}
+                onChange={e => setEndDateTime(e.target.value)}
+                // ไม่ required
+                style={{
+                  width: '100%',
+                  maxWidth: 420,
+                  padding: '12px 16px',
+                  border: '2px solid #f1f5f9',
+                  borderRadius: '12px',
+                  fontSize: '16px',
+                  outline: 'none',
+                  background: '#fafafa',
+                  marginBottom: 0,
+                  transition: 'all 0.2s',
+                }}
+                onFocus={e => e.target.style.borderColor = '#3b82f6'}
+                onBlur={e => e.target.style.borderColor = '#f1f5f9'}
+              />
             </div>
-            <div style={{display:'flex', flexDirection:'column', gap:8, minWidth:120, width:'100%'}}>
+            <div style={{ display: 'flex', flexDirection: 'row', gap: 16, minWidth: 120, width: '100%', marginTop: 12 }}>
               <button
                 type="submit"
                 disabled={isSubmitting}
                 className="btn-primary"
-                style={{width:'100%', fontWeight:600, fontSize:16, boxShadow:'0 2px 8px #2563eb22', borderRadius:8, padding:'10px 0'}}
+                style={{
+                  width: '100%',
+                  fontWeight: 600,
+                  fontSize: 16,
+                  boxShadow: '0 2px 8px #2563eb22',
+                  borderRadius: 10,
+                  padding: '12px 0',
+                  minWidth: 120,
+                  background: isSubmitting ? '#e2e8f0' : '#2563eb',
+                  color: isSubmitting ? '#94a3b8' : 'white',
+                  cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                  border: 'none',
+                  transition: 'all 0.2s',
+                }}
               >
                 {isSubmitting ? 'กำลังบันทึก...' : 'บันทึกข้อมูล'}
               </button>
               <button
                 type="button"
                 className="btn-secondary"
-                style={{width:'100%', marginTop:8, fontWeight:500, fontSize:15, borderRadius:8, padding:'8px 0'}}
-                onClick={()=>{ setShowForm(false); setError(''); setSuccess(''); }}
+                style={{
+                  width: '100%',
+                  marginTop: 0,
+                  fontWeight: 500,
+                  fontSize: 15,
+                  borderRadius: 10,
+                  padding: '12px 0',
+                  minWidth: 120,
+                  background: '#f3f4f6',
+                  color: '#374151',
+                  border: '2px solid #e2e8f0',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+                onClick={() => { setShowForm(false); setError(''); setSuccess(''); }}
               >
                 ยกเลิก
               </button>
@@ -241,8 +367,11 @@ export default function Dashboard() {
       <div style={{color:'#888', margin:'24px 0', textAlign:'center'}}>ไม่พบข้อมูล</div>
     ) : (
       (() => {
-        // filter เฉพาะโพสต์ของกองพันเดียวกับ user
-        const filtered = entries.filter(e => !userBattalion || String(e.battalion) === String(userBattalion));
+        // filter: ถ้ามี userBattalion ให้เห็นเฉพาะโพสต์ที่ battalion ตรงกับ userBattalion หรือ battalion ว่าง/null
+        // ถ้าไม่มี userBattalion ให้เห็นทุกโพสต์
+        const filtered = userBattalion
+          ? entries.filter(e => String(e.battalion) === String(userBattalion) || !e.battalion || e.battalion === '')
+          : entries;
         // group by date
         const groups = {};
         filtered.forEach(e => {
@@ -281,7 +410,7 @@ export default function Dashboard() {
                           {/* Title เป็นหัวข้อ */}
                           <div style={{fontWeight:'bold', fontSize:'1.18rem', color:'#222', marginBottom:2}}>{e.title || 'ไม่มี'}</div>
                           {/* Note เป็นรายละเอียด */}
-                          <div style={{color:'#555', fontSize:'1rem', marginBottom:2}}>{e.note || 'หัวข้อ'}</div>
+                          <div style={{color:'#555', fontSize:'1rem', marginBottom:2, whiteSpace:'pre-line'}}>{e.note || 'หัวข้อ'}</div>
                           {/* กองพัน */}
                           <div style={{fontSize:13, color:'#666', marginBottom:2}}>
                             <span>กองพัน: {e.battalion ? String(e.battalion) : '-'}</span>
