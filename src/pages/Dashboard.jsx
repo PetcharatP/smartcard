@@ -132,7 +132,7 @@ export default function Dashboard() {
         gap: 16
       }}>
         <div style={{minWidth: 200}}>
-          <h1 style={{color:'#2563eb', fontWeight:700, fontSize:'2.2rem', margin:0}}>ข่าวสาร / ภารกิจของ นนร.</h1>
+          <h2 style={{color:'#2563eb', fontWeight:700, fontSize:'2.2rem', margin:0}}>ข่าวสาร / ภารกิจของ นนร.</h2>
           <div style={{color:'#666', fontSize:'1.1rem'}}>สร้างและดูรายการ Dashboard ของคุณได้ที่นี่</div>
         </div>
         <button
