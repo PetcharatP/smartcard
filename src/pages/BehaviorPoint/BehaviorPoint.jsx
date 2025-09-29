@@ -113,15 +113,15 @@ export default function BehaviorPoint() {
                 fontSize: '1em',
                 marginLeft: 8,
                 color:
-                  point === 0 ? '#22c55e' :
+                  point === 0 ? '#000000ff' :
                   point <= 65 ? '#e11d48' :
                   point <= 120 ? '#f59e42' :
                   point <= 165 ? '#facc15' : '#22c55e',
               }}>
-                {point === 0 ? 'ดีมาก' :
-                  point <= 65 ? 'ดี' :
+                {point === 0 ? 'เหี้ย' :
+                  point <= 65 ? 'ปรับปรุง' :
                   point <= 120 ? 'พอใช้' :
-                  point <= 165 ? 'ปรับปรุง' : 'ดีมาก'}
+                  point <= 165 ? 'ดี' : 'ดีมาก'}
               </span>
             </p>
             {isAdmin && <p className="admin-badge">สถานะ: Admin</p>}

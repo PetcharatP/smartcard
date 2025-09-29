@@ -928,7 +928,7 @@ export default function GunBorrowing() {
                         <table style={{ width: "100%", fontSize: "1rem" }}>
                             <thead>
                                 <tr>
-                                    <th style={{ width: "70%" }}>Gun QR Code</th>
+                                    <th style={{ width: "70%" }}>เลขอาวุธปืนสำรอง</th>
                                     <th style={{ width: "30%" }}>ลบ</th>
                                 </tr>
                             </thead>

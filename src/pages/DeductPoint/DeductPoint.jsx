@@ -98,7 +98,8 @@ export default function DeductPoint() {
 
   const handleSubmit = async e => {
     e.preventDefault();
-    if (currentPoint !== null && Math.abs(change) > currentPoint) {
+    // เฉพาะการตัดคะแนน (change < 0) เท่านั้นที่ต้องเช็คคะแนนคงเหลือ
+    if (change < 0 && currentPoint !== null && Math.abs(change) > currentPoint) {
       setMessage('ไม่สามารถตัดคะแนนได้ คะแนนคงเหลือไม่พอ');
       return;
     }
