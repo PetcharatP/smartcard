@@ -94,7 +94,36 @@ export default function BehaviorPoint() {
                 }
               </p>
             )}
-            <p><strong>คะแนนพฤติกรรม:</strong> <span className="point">{point}</span></p>
+            <p>
+              <strong>คะแนนพฤติกรรม:</strong>
+              <span className="point" style={{
+                color:
+                  point === 0 ? '#22c55e' :
+                  point <= 65 ? '#e11d48' :
+                  point <= 120 ? '#f59e42' :
+                  point <= 165 ? '#facc15' : '#22c55e',
+                fontWeight: 700,
+                fontSize: '1.2em',
+                padding: '0 8px'
+              }}>
+                {point}
+              </span>
+              <span style={{
+                fontWeight: 600,
+                fontSize: '1em',
+                marginLeft: 8,
+                color:
+                  point === 0 ? '#22c55e' :
+                  point <= 35 ? '#facc15' :
+                  point <= 80 ? '#f59e42' :
+                  point <= 120 ? '#e11d48' : '#22c55e'
+              }}>
+                {point === 0 ? 'ดีมาก' :
+                  point <= 35 ? 'ดี' :
+                  point <= 80 ? 'พอใช้' :
+                  point <= 120 ? 'ปรับปรุง' : 'ดีมาก'}
+              </span>
+            </p>
             {isAdmin && <p className="admin-badge">สถานะ: Admin</p>}
           </div>
         </div>
