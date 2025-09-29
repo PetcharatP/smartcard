@@ -118,7 +118,8 @@ export default function BehaviorPoint() {
                   point <= 120 ? '#f59e42' :
                   point <= 165 ? '#facc15' : '#22c55e',
               }}>
-                {point <= 0 ? 'เหี้ย' :
+                {point < 0 ? 'โคตรเหี้ย' :
+                point === 0 ? 'เหี้ย' :
                   point <= 65 ? 'ปรับปรุง' :
                   point <= 120 ? 'พอใช้' :
                   point <= 165 ? 'ดี' : 'ดีมาก'}
