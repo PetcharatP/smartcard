@@ -17,6 +17,7 @@ const majorOptions = [
 export default function EditProfile() {
   const [realname, setRealname] = useState('');
   const [userid, setUserId] = useState('');
+  const [oldUserid, setOldUserid] = useState('');
   const [blood, setBlood] = useState('');
   const [gunNumber, setGunNumber] = useState('');
   const [major, setMajor] = useState('');
@@ -50,6 +51,7 @@ export default function EditProfile() {
         if (data.status) {
           setRealname(data.data.realname || '');
           setUserId(data.data.userid || '');
+          setOldUserid(data.data.userid || '');
           setBlood(data.data.blood || '');
           setGunNumber(data.data.gunNumber || '');
           let majorLabel = data.data.major || '';
@@ -127,9 +129,10 @@ export default function EditProfile() {
   const handleSave = (e) => {
     e.preventDefault();
     const token = localStorage.getItem('token');
-    const formData = new FormData();
-    formData.append('realname', realname);
-    formData.append('userid', userid);
+  const formData = new FormData();
+  formData.append('realname', realname);
+  formData.append('userid', userid);
+  formData.append('oldUserid', oldUserid);
     formData.append('blood', blood);
     formData.append('gunNumber', gunNumber);
     formData.append('major', major);
