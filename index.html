@@ -27,76 +27,103 @@
     <meta name="theme-color" content="#2563eb">
     
     <style>
-      /* Loading Screen Styles */
+      /* Loading Screen Styles - Minimal Design */
       #loading-screen {
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        background: linear-gradient(135deg, #d8ac1a 0%, #e90606 100%);
+        background: #ffffff;
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
         z-index: 9999;
-        color: white;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       }
       
       .logo-container {
         display: flex;
         flex-direction: column;
         align-items: center;
-        margin-bottom: 2rem;
+        margin-bottom: 3rem;
       }
       
       .site-logo {
-        width: 120px;
-        height: 120px;
-        background: white;
-        border-radius: 20px;
+        width: 100px;
+        height: 100px;
+        background: #ffffff;
+        border-radius: 16px;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-bottom: 1rem;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-        animation: logoFloat 3s ease-in-out infinite;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border: 1px solid #f1f5f9;
+        animation: logoGlow 2s ease-in-out infinite alternate;
         overflow: hidden;
       }
       
       .site-logo img {
-        width: 80px;
-        height: 80px;
+        width: 70px;
+        height: 70px;
         object-fit: contain;
       }
       
       .site-title {
-        font-size: 1.8rem;
-        font-weight: bold;
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #1e293b;
         margin-bottom: 0.5rem;
         text-align: center;
+        letter-spacing: 0.5px;
       }
       
       .site-subtitle {
-        font-size: 1rem;
-        opacity: 0.8;
+        font-size: 0.875rem;
+        color: #64748b;
         text-align: center;
+        font-weight: 400;
       }
       
       .loading-spinner {
-        width: 40px;
-        height: 40px;
-        border: 3px solid rgba(255, 255, 255, 0.3);
-        border-top: 3px solid white;
+        width: 32px;
+        height: 32px;
+        border: 2px solid #f1f5f9;
+        border-top: 2px solid #3b82f6;
         border-radius: 50%;
         animation: spin 1s linear infinite;
-        margin-top: 2rem;
+        margin-top: 1rem;
       }
       
-      @keyframes logoFloat {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-10px); }
+      .loading-dots {
+        display: flex;
+        gap: 4px;
+        margin-top: 1rem;
+      }
+      
+      .dot {
+        width: 8px;
+        height: 8px;
+        background: #cbd5e1;
+        border-radius: 50%;
+        animation: dotPulse 1.4s ease-in-out infinite both;
+      }
+      
+      .dot:nth-child(1) { animation-delay: -0.32s; }
+      .dot:nth-child(2) { animation-delay: -0.16s; }
+      .dot:nth-child(3) { animation-delay: 0s; }
+      
+      @keyframes logoGlow {
+        0% { 
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+          transform: scale(1);
+        }
+        100% { 
+          box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
+          transform: scale(1.02);
+        }
       }
       
       @keyframes spin {
@@ -104,9 +131,49 @@
         100% { transform: rotate(360deg); }
       }
       
+      @keyframes dotPulse {
+        0%, 80%, 100% {
+          transform: scale(0.8);
+          opacity: 0.5;
+        }
+        40% {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+      
       #loading-screen.fade-out {
         opacity: 0;
-        transition: opacity 0.5s ease-out;
+        transition: opacity 0.6s ease-out;
+      }
+      
+      /* Dark mode support */
+      @media (prefers-color-scheme: dark) {
+        #loading-screen {
+          background: #0f172a;
+        }
+        
+        .site-logo {
+          background: #1e293b;
+          border: 1px solid #334155;
+        }
+        
+        .site-title {
+          color: #f1f5f9;
+        }
+        
+        .site-subtitle {
+          color: #94a3b8;
+        }
+        
+        .loading-spinner {
+          border: 2px solid #334155;
+          border-top: 2px solid #3b82f6;
+        }
+        
+        .dot {
+          background: #475569;
+        }
       }
     </style>
   </head>
@@ -120,7 +187,11 @@
         <div class="site-title">C R M A</div>
         <div class="site-subtitle">Smartcard Management System</div>
       </div>
-      <div class="loading-spinner"></div>
+      <div class="loading-dots">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
     </div>
     
     <div id="root"></div>
@@ -134,8 +205,8 @@
           loadingScreen.classList.add('fade-out');
           setTimeout(function() {
             loadingScreen.style.display = 'none';
-          }, 500);
-        }, 1000); // Show loading for at least 1 second
+          }, 600);
+        }, 800); // Show loading for at least 0.8 second
       });
     </script>
   </body>
