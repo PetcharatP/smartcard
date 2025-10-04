@@ -82,10 +82,19 @@ export default function UserScanner() {
 
     // ปิดกล้อง Scanner
     const stopCamera = () => {
+        console.log('Stopping camera...', { scannerInstance: !!scannerInstance });
         if (scannerInstance) {
-            scannerInstance.clear().catch(console.error);
-            setScannerInstance(null);
-            // scannerReady ยังคงเป็น true เพื่อแสดงปุ่มเริ่มกล้องใหม่
+            try {
+                scannerInstance.clear();
+                setScannerInstance(null);
+                console.log('Camera stopped successfully');
+                // scannerReady ยังคงเป็น true เพื่อแสดงปุ่มเริ่มกล้องใหม่
+            } catch (error) {
+                console.error('Error stopping camera:', error);
+                setScannerInstance(null); // บังคับให้เป็น null ถึงแม้จะมี error
+            }
+        } else {
+            console.log('No scanner instance to stop');
         }
     };
 
@@ -103,11 +112,16 @@ export default function UserScanner() {
                     gunNumber: data.gunNumber || 'N/A',
                     ...data // เผื่อมีข้อมูลเพิ่มเติม
                 });
-                setStatusMessage(`✅ พบข้อมูลผู้ใช้: ${data.realname} - กล้องถูกปิดแล้ว`);
                 
                 // ปิดกล้องอัตโนมัติเมื่อพบข้อมูลสำเร็จ
+                console.log('Found user data, stopping camera...');
                 stopCamera();
                 setShowManualInput(false); // ซ่อนฟอร์มกรอกข้อมูลด้วยตนเอง
+                
+                // ใช้ setTimeout เพื่อให้แน่ใจว่า state ได้อัพเดท
+                setTimeout(() => {
+                    setStatusMessage(`✅ พบข้อมูลผู้ใช้: ${data.realname} - กล้องถูกปิดแล้ว`);
+                }, 100);
                 
             } else {
                 setUserData(null);
@@ -268,7 +282,8 @@ export default function UserScanner() {
                 Scanner Instance: {scannerInstance ? '✅ Active' : '❌ Inactive'}<br/>
                 Scanner Ready: {scannerReady ? '✅ Ready' : '❌ Not Ready'}<br/>
                 Show Manual Input: {showManualInput ? '✅ Yes' : '❌ No'}<br/>
-                User Data: {userData ? '✅ Loaded' : '❌ No Data'}
+                User Data: {userData ? `✅ Loaded (${userData.realname})` : '❌ No Data'}<br/>
+                Should Show Button: {(!scannerInstance && scannerReady && !showManualInput) ? '✅ Yes' : '❌ No'}
             </div>
 
             {/* Status Message */}
