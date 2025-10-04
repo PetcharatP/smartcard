@@ -85,7 +85,7 @@ export default function UserScanner() {
         }
 
         setUserQRCode(decodedText);
-        setStatusMessage(`🔍 กำลังค้นหาข้อมูลผู้ใช้: ${decodedText}`);
+        setStatusMessage(`🔍 กำลังค้นหาข้อมูลผู้ใช้จากรหัส QR: ${decodedText}`);
         
         await fetchUserData(decodedText);
     };
@@ -138,15 +138,19 @@ export default function UserScanner() {
     };
 
     // ดึงข้อมูลผู้ใช้จาก API
-    const fetchUserData = async (qrCode) => {
+    const fetchUserData = async (searchTerm) => {
         setIsLoading(true);
         try {
-            const response = await fetch(`/api/get-user-details?userQRCode=${encodeURIComponent(qrCode)}`);
+            // ตรวจสอบว่าเป็นตัวเลขหรือไม่ (User ID) หรือเป็นชื่อ
+            const isNumeric = /^\d+$/.test(searchTerm.trim());
+            const queryParam = isNumeric ? 'userQRCode' : 'userName';
+            
+            const response = await fetch(`/api/get-user-details?${queryParam}=${encodeURIComponent(searchTerm)}`);
             const data = await response.json();
             
             if (data.success) {
                 setUserData({
-                    userid: qrCode,
+                    userid: data.userid || searchTerm,
                     realname: data.realname,
                     gunNumber: data.gunNumber || 'N/A',
                     ...data // เผื่อมีข้อมูลเพิ่มเติม
@@ -162,13 +166,15 @@ export default function UserScanner() {
                     
                     // Force re-render หลังจากปิดกล้อง
                     setTimeout(() => {
-                        setStatusMessage(`✅ พบข้อมูลผู้ใช้: ${data.realname} - กล้องถูกปิดแล้ว`);
+                        const searchType = isNumeric ? 'รหัสประจำตัว' : 'ชื่อผู้ใช้';
+                        setStatusMessage(`✅ พบข้อมูลผู้ใช้จาก${searchType}: ${data.realname} - กล้องถูกปิดแล้ว`);
                     }, 200);
                 }, 10);
                 
             } else {
                 setUserData(null);
-                setStatusMessage(`❌ ไม่พบข้อมูลผู้ใช้: ${qrCode}`);
+                const searchType = isNumeric ? 'รหัสประจำตัว' : 'ชื่อผู้ใช้';
+                setStatusMessage(`❌ ไม่พบข้อมูลผู้ใช้จาก${searchType}: ${searchTerm}`);
             }
         } catch (error) {
             console.error('Error fetching user data:', error);
@@ -183,8 +189,15 @@ export default function UserScanner() {
     const handleManualSubmit = (e) => {
         e.preventDefault();
         if (manualInput.trim()) {
-            setUserQRCode(manualInput.trim());
-            fetchUserData(manualInput.trim());
+            const searchTerm = manualInput.trim();
+            setUserQRCode(searchTerm);
+            
+            // แสดงข้อความสถานะที่เหมาะสม
+            const isNumeric = /^\d+$/.test(searchTerm);
+            const searchType = isNumeric ? 'รหัสประจำตัว' : 'ชื่อผู้ใช้';
+            setStatusMessage(`🔍 กำลังค้นหาข้อมูลจาก${searchType}: ${searchTerm}`);
+            
+            fetchUserData(searchTerm);
             setShowManualInput(false);
         }
     };
@@ -274,7 +287,7 @@ export default function UserScanner() {
                         <form onSubmit={handleManualSubmit} className="manual-form">
                             <input
                                 type="text"
-                                placeholder="กรอก User ID"
+                                placeholder="กรอก User ID หรือชื่อผู้ใช้"
                                 value={manualInput}
                                 onChange={(e) => setManualInput(e.target.value)}
                                 className="manual-input"
@@ -284,6 +297,9 @@ export default function UserScanner() {
                                 🔍 ค้นหา
                             </button>
                         </form>
+                        <div className="search-hint">
+                            💡 สามารถค้นหาด้วย User ID (รหัสประจำตัว) หรือชื่อ-นามสกุลได้
+                        </div>
                     </div>
                 ) : (
                     <div className="qr-scanner-wrapper">

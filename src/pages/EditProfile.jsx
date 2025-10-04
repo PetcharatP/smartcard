@@ -128,6 +128,13 @@ export default function EditProfile() {
 
   const handleSave = (e) => {
     e.preventDefault();
+    
+    // ตรวจสอบรหัสประจำตัวให้มี 13 หลักพอดี
+    if (userid.length !== 13) {
+      showMessage('กรุณากรอกรหัสประจำตัวให้ครบ 13 หลัก', 'error');
+      return;
+    }
+    
     const token = localStorage.getItem('token');
   const formData = new FormData();
   formData.append('realname', realname);
@@ -195,14 +202,30 @@ export default function EditProfile() {
             />
           </div>
           <div className="form-group">
-            <label className="form-label">รหัสประจำตัว</label>
+            <label className="form-label">รหัสประจำตัว (13 หลัก)</label>
             <input
               type="text"
-              placeholder="กรอกรหัสประจำตัว"
+              placeholder="กรอกรหัสประจำตัว 13 หลัก"
               value={userid}
-              onChange={(e) => setUserId(e.target.value)}
+              onChange={(e) => {
+                // อนุญาตให้กรอกเฉพาะตัวเลข
+                const value = e.target.value.replace(/\D/g, '');
+                // จำกัดความยาวไม่เกิน 13 หลัก
+                if (value.length <= 13) {
+                  setUserId(value);
+                }
+              }}
+              pattern="[0-9]{13}"
+              minLength="13"
+              maxLength="13"
+              title="กรุณากรอกรหัสประจำตัว 13 หลัก (ตัวเลขเท่านั้น)"
               required
             />
+            {userid && userid.length !== 13 && (
+              <small style={{ color: '#e57373', fontSize: '0.8rem', marginTop: '4px', display: 'block' }}>
+                รหัสประจำตัวต้องมี 13 หลักพอดี (ปัจจุบัน: {userid.length} หลัก)
+              </small>
+            )}
           </div>
           <div className="form-group">
             <label className="form-label">กรุ๊ปเลือด</label>

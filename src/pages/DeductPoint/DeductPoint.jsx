@@ -12,6 +12,7 @@ export default function DeductPoint() {
   const [message, setMessage] = useState('');
   const [type, setType] = useState('');
   const [violation, setViolation] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const apiUrl = process.env.NODE_ENV === 'production' ? '' : (import.meta.env.VITE_API_URL || '');
 
   // ดึงข้อมูลจาก URL parameters เมื่อโหลดหน้า
@@ -117,18 +118,54 @@ export default function DeductPoint() {
 
   const handleSubmit = async e => {
     e.preventDefault();
+    
+    // ป้องกันการกดซ้ำ
+    if (isSubmitting) {
+      return;
+    }
+    
     // เฉพาะการตัดคะแนน (change < 0) เท่านั้นที่ต้องเช็คคะแนนคงเหลือ
     if (change < 0 && currentPoint !== null && Math.abs(change) > currentPoint) {
       setMessage('ไม่สามารถตัดคะแนนได้ คะแนนคงเหลือไม่พอ');
       return;
     }
-    const res = await fetch(`/api/behavior/deduct`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userid, change, reason, operator })
-    });
-    const data = await res.json();
-    setMessage(data.message || (data.status ? 'สำเร็จ' : 'เกิดข้อผิดพลาด'));
+    
+    setIsSubmitting(true);
+    setMessage('กำลังดำเนินการ...');
+    
+    try {
+      const res = await fetch(`/api/behavior/deduct`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userid, change, reason, operator })
+      });
+      const data = await res.json();
+      
+      if (data.status || data.success) {
+        setMessage('✅ ตัดคะแนนสำเร็จ');
+        
+        // รีเฟรชข้อมูลคะแนนปัจจุบัน
+        await fetchCurrentPoint(userid);
+        
+        // รีเซ็ตฟอร์ม
+        setTimeout(() => {
+          setType('');
+          setViolation('');
+          setChange(-1);
+          setReason('');
+          setOperator('');
+          setMessage('');
+        }, 2000);
+        
+      } else {
+        setMessage(data.message || 'เกิดข้อผิดพลาด');
+      }
+    } catch (error) {
+      console.error('Error submitting deduct point:', error);
+      setMessage('❌ เกิดข้อผิดพลาดในการเชื่อมต่อ');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -226,7 +263,9 @@ export default function DeductPoint() {
                 />
               </label>
             </div>
-            <button type="submit">ตัดคะแนน</button>
+            <button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'กำลังดำเนินการ...' : 'ตัดคะแนน'}
+            </button>
           </form>
         {message && <div className="message">{message}</div>}
         </div>
