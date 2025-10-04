@@ -238,13 +238,16 @@ export default function UserScanner() {
                                 <button 
                                     type="button" 
                                     className="start-camera-btn"
-                                    onClick={startCamera}
+                                    onClick={() => {
+                                        console.log('Starting camera...');
+                                        startCamera();
+                                    }}
                                 >
                                     🎥 เริ่มกล้องใหม่
                                 </button>
-                                <div id="user-qr-reader" className="qr-reader"></div>
                             </div>
                         )}
+                        {!scannerInstance && <div id="user-qr-reader" className="qr-reader"></div>}
                     </div>
                 )}
             </div>
