@@ -273,7 +273,7 @@ export default function GunBorrowing() {
     // Delete all records for current date
     const deleteAllRecords = async () => {
         const confirmMessage = `ต้องการลบข้อมูลทั้งหมดในวันที่ ${currentDate} หรือไม่?\n\n` +
-                             `จำนวนข้อมูลที่จะถูกลบ: ${savedRecords.all.length} รายการ\n\n` +
+                             `จำนวنข้อมูลที่จะถูกลบ: ${savedRecords.all.length} รายการ\n\n` +
                              `⚠️ การลบจะไม่สามารถกู้คืนได้`;
         
         if (!window.confirm(confirmMessage)) return;
@@ -295,6 +295,410 @@ export default function GunBorrowing() {
             console.error('Failed to delete all records:', error);
             setStatusMessage('❌ เกิดข้อผิดพลาดในการลบข้อมูล');
         }
+    };
+
+    // Print daily report
+    const printDailyReport = () => {
+        if (!savedRecords.all || savedRecords.all.length === 0) {
+            alert('ไม่มีข้อมูลสำหรับพิมพ์ในวันที่เลือก');
+            return;
+        }
+
+        // สร้างหน้าใหม่สำหรับพิมพ์
+        const printWindow = window.open('', '_blank');
+        
+        // ฟังก์ชันแปลงเวลาเป็นรูปแบบ ชม.:นาที
+        const formatTime = (dateString) => {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleTimeString('th-TH', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: false 
+            });
+        };
+
+        // ฟังก์ชันแปลงวันที่เป็นภาษาไทย
+        const formatDateThai = (dateString) => {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('th-TH', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        };
+
+        // จัดกลุ่มข้อมูลตามสถานะ
+        const borrowedRecords = savedRecords.all.filter(record => record.status === 'borrowed');
+        const returnedRecords = savedRecords.all.filter(record => record.status === 'returned');
+
+        const printContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>รายงานการเบิก-คืนปืน วันที่ ${formatDateThai(currentDate)}</title>
+            <style>
+                body {
+                    font-family: 'Sarabun', Arial, sans-serif;
+                    margin: 10px;
+                    font-size: 14px;
+                    line-height: 1.4;
+                }
+                .header {
+                    text-align: center;
+                    margin-bottom: 20px;
+                    border-bottom: 3px solid #2c5aa0;
+                    padding-bottom: 15px;
+                }
+                .header h1 {
+                    color: #2c5aa0;
+                    margin: 0;
+                    font-size: 20px;
+                    font-weight: bold;
+                }
+                .header h2 {
+                    color: #666;
+                    margin: 5px 0;
+                    font-size: 16px;
+                    font-weight: normal;
+                }
+                .summary {
+                    background: #f8f9fa;
+                    border: 2px solid #e9ecef;
+                    border-radius: 8px;
+                    padding: 15px;
+                    margin-bottom: 20px;
+                }
+                .summary h3 {
+                    color: #2c5aa0;
+                    margin: 0 0 10px 0;
+                    font-size: 16px;
+                }
+                .summary-stats {
+                    display: flex;
+                    justify-content: space-around;
+                    flex-wrap: wrap;
+                    gap: 10px;
+                }
+                .stat-item {
+                    text-align: center;
+                    margin: 5px;
+                    min-width: 80px;
+                }
+                .stat-number {
+                    font-size: 20px;
+                    font-weight: bold;
+                    display: block;
+                }
+                .stat-label {
+                    font-size: 11px;
+                    color: #666;
+                    word-break: keep-all;
+                }
+                .total { color: #0066cc; }
+                .returned { color: #28a745; }
+                .borrowed { color: #fd7e14; }
+                
+                .section {
+                    margin-bottom: 20px;
+                    page-break-inside: avoid;
+                }
+                .section h3 {
+                    background: #2c5aa0;
+                    color: white;
+                    padding: 8px 12px;
+                    margin: 0 0 15px 0;
+                    border-radius: 5px;
+                    font-size: 14px;
+                }
+                
+                /* Mobile-first responsive table */
+                .table-container {
+                    overflow-x: auto;
+                    -webkit-overflow-scrolling: touch;
+                    margin-bottom: 15px;
+                }
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    min-width: 600px;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                }
+                th, td {
+                    border: 1px solid #ddd;
+                    padding: 6px 8px;
+                    text-align: left;
+                    font-size: 12px;
+                    word-break: break-word;
+                }
+                th {
+                    background-color: #f1f3f4;
+                    font-weight: bold;
+                    color: #333;
+                    white-space: nowrap;
+                }
+                tr:nth-child(even) {
+                    background-color: #f9f9f9;
+                }
+                .time-col {
+                    font-family: 'Courier New', monospace;
+                    font-weight: bold;
+                    white-space: nowrap;
+                    font-size: 11px;
+                }
+                .status-returned {
+                    color: #28a745;
+                    font-weight: bold;
+                    font-size: 11px;
+                }
+                .status-borrowed {
+                    color: #fd7e14;
+                    font-weight: bold;
+                    font-size: 11px;
+                }
+                .footer {
+                    margin-top: 30px;
+                    padding-top: 15px;
+                    border-top: 2px solid #eee;
+                    text-align: center;
+                    color: #666;
+                    font-size: 11px;
+                }
+                .no-data {
+                    text-align: center;
+                    color: #999;
+                    font-style: italic;
+                    padding: 20px;
+                    font-size: 14px;
+                }
+                
+                /* Mobile specific styles */
+                @media screen and (max-width: 768px) {
+                    body {
+                        margin: 5px;
+                        font-size: 12px;
+                    }
+                    .header h1 {
+                        font-size: 18px;
+                    }
+                    .header h2 {
+                        font-size: 14px;
+                    }
+                    .summary {
+                        padding: 10px;
+                        margin-bottom: 15px;
+                    }
+                    .summary h3 {
+                        font-size: 14px;
+                    }
+                    .stat-number {
+                        font-size: 18px;
+                    }
+                    .stat-label {
+                        font-size: 10px;
+                    }
+                    .section h3 {
+                        font-size: 13px;
+                        padding: 6px 10px;
+                    }
+                    th, td {
+                        padding: 4px 6px;
+                        font-size: 11px;
+                    }
+                    .time-col {
+                        font-size: 10px;
+                    }
+                    .status-returned, .status-borrowed {
+                        font-size: 10px;
+                    }
+                }
+                
+                /* Very small mobile screens */
+                @media screen and (max-width: 480px) {
+                    body {
+                        margin: 2px;
+                        font-size: 11px;
+                    }
+                    .header h1 {
+                        font-size: 16px;
+                    }
+                    .header h2 {
+                        font-size: 12px;
+                    }
+                    .summary {
+                        padding: 8px;
+                    }
+                    .summary-stats {
+                        flex-direction: column;
+                        gap: 5px;
+                    }
+                    .stat-item {
+                        margin: 2px;
+                    }
+                    .section h3 {
+                        font-size: 12px;
+                        padding: 5px 8px;
+                    }
+                    table {
+                        min-width: 500px;
+                        font-size: 10px;
+                    }
+                    th, td {
+                        padding: 3px 4px;
+                        font-size: 10px;
+                    }
+                    .time-col {
+                        font-size: 9px;
+                    }
+                }
+                
+                @media print {
+                    .no-print { display: none; }
+                    body { 
+                        margin: 0; 
+                        font-size: 12px;
+                    }
+                    .section { 
+                        page-break-inside: avoid; 
+                    }
+                    table {
+                        min-width: auto;
+                        width: 100%;
+                    }
+                    th, td {
+                        font-size: 10px;
+                        padding: 4px;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>📋 รายงานการเบิก-คืนปืน</h1>
+                <h2>วันที่ ${formatDateThai(currentDate)}</h2>
+            </div>
+            
+            <div class="summary">
+                <h3>📊 สรุปภาพรวม</h3>
+                <div class="summary-stats">
+                    <div class="stat-item">
+                        <span class="stat-number total">${savedRecords.all.length}</span>
+                        <span class="stat-label">รายการทั้งหมด</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number returned">${savedRecords.summary?.totalReturned || 0}</span>
+                        <span class="stat-label">คืนแล้ว</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number borrowed">${savedRecords.summary?.notReturned || 0}</span>
+                        <span class="stat-label">ยังไม่คืน</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>✅ รายชื่อผู้ที่คืนปืนแล้ว (${returnedRecords.length} คน)</h3>
+                ${returnedRecords.length === 0 ? 
+                    '<div class="no-data">ไม่มีรายการที่คืนแล้ว</div>' :
+                    `<div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width: 8%; min-width: 40px;">ลำดับ</th>
+                                    <th style="width: 30%; min-width: 120px;">ชื่อ-นามสกุล</th>
+                                    <th style="width: 15%; min-width: 80px;">หมายเลขปืน</th>
+                                    <th style="width: 15%; min-width: 70px;">เวลาเบิก</th>
+                                    <th style="width: 15%; min-width: 70px;">เวลาคืน</th>
+                                    <th style="width: 12%; min-width: 60px;">ระยะเวลาใช้</th>
+                                    <th style="width: 5%; min-width: 50px;">สถานะ</th>
+                                </tr>
+                            </thead>
+                        <tbody>
+                            ${returnedRecords.map((record, index) => {
+                                const borrowTime = new Date(record.borrowTime);
+                                const returnTime = new Date(record.returnTime);
+                                const durationMs = returnTime - borrowTime;
+                                const durationHours = Math.floor(durationMs / (1000 * 60 * 60));
+                                const durationMinutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
+                                const durationText = `${durationHours}:${durationMinutes.toString().padStart(2, '0')}`;
+                                
+                                return `
+                                <tr>
+                                    <td style="text-align: center">${index + 1}</td>
+                                    <td>${record.realname}</td>
+                                    <td style="text-align: center; font-weight: bold">${record.gunQRCode}</td>
+                                    <td class="time-col">${formatTime(record.borrowTime)}</td>
+                                    <td class="time-col">${formatTime(record.returnTime)}</td>
+                                    <td class="time-col" style="text-align: center">${durationText}</td>
+                                    <td class="status-returned" style="text-align: center">คืนแล้ว</td>
+                                </tr>`;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                    </div>`
+                }
+            </div>
+
+            <div class="section">
+                <h3>⚠️ รายชื่อผู้ที่ยังไม่ได้คืนปืน (${borrowedRecords.length} คน)</h3>
+                ${borrowedRecords.length === 0 ? 
+                    '<div class="no-data">ไม่มีรายการที่ยังไม่ได้คืน</div>' :
+                    `<div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width: 8%; min-width: 40px;">ลำดับ</th>
+                                    <th style="width: 35%; min-width: 120px;">ชื่อ-นามสกุล</th>
+                                    <th style="width: 20%; min-width: 80px;">หมายเลขปืน</th>
+                                    <th style="width: 20%; min-width: 70px;">เวลาเบิก</th>
+                                    <th style="width: 12%; min-width: 70px;">ระยะเวลาคงค้าง</th>
+                                    <th style="width: 5%; min-width: 50px;">สถานะ</th>
+                                </tr>
+                            </thead>
+                        <tbody>
+                            ${borrowedRecords.map((record, index) => {
+                                const borrowTime = new Date(record.borrowTime);
+                                const currentTime = new Date();
+                                const durationMs = currentTime - borrowTime;
+                                const durationHours = Math.floor(durationMs / (1000 * 60 * 60));
+                                const durationMinutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
+                                const durationText = `${durationHours}:${durationMinutes.toString().padStart(2, '0')}`;
+                                
+                                return `
+                                <tr>
+                                    <td style="text-align: center">${index + 1}</td>
+                                    <td>${record.realname}</td>
+                                    <td style="text-align: center; font-weight: bold">${record.gunQRCode}</td>
+                                    <td class="time-col">${formatTime(record.borrowTime)}</td>
+                                    <td class="time-col" style="text-align: center">${durationText}</td>
+                                    <td class="status-borrowed" style="text-align: center">ยังไม่คืน</td>
+                                </tr>`;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                    </div>`
+                }
+            </div>
+
+            <div class="footer">
+                <p>📅 รายงานสร้างเมื่อ: ${new Date().toLocaleString('th-TH')}</p>
+                <p>🖨️ พิมพ์จากระบบยืม-คืนปืน</p>
+            </div>
+        </body>
+        </html>
+        `;
+
+        printWindow.document.write(printContent);
+        printWindow.document.close();
+        
+        // รอให้เนื้อหาโหลดเสร็จแล้วค่อยพิมพ์
+        printWindow.onload = function() {
+            setTimeout(() => {
+                printWindow.print();
+            }, 500);
+        };
     };
 
     // Add public gun
@@ -1111,26 +1515,45 @@ export default function GunBorrowing() {
                     />
                 </div>
                 
-                {/* ปุ่มลบข้อมูลทั้งวัน */}
+                {/* ปุ่มพิมพ์รายงานและลบข้อมูล */}
                 {savedRecords.all && savedRecords.all.length > 0 && (
                     <div style={{ borderTop: "1px solid #e0e0e0", paddingTop: 16 }}>
-                        <button
-                            onClick={deleteAllRecords}
-                            style={{
-                                background: "#d32f2f",
-                                color: "#fff",
-                                border: "none",
-                                borderRadius: 6,
-                                padding: "10px 20px",
-                                cursor: "pointer",
-                                fontSize: "1rem",
-                                fontWeight: "500"
-                            }}
-                        >
-                            🗑️ ลบข้อมูลทั้งวันที่ {currentDate}
-                        </button>
-                        <div style={{ fontSize: "0.85rem", color: "#666", marginTop: 8 }}>
-                            ⚠️ การลบจะไม่สามารถกู้คืนได้
+                        <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap", marginBottom: 16 }}>
+                            <button
+                                onClick={printDailyReport}
+                                style={{
+                                    background: "#1976d2",
+                                    color: "#fff",
+                                    border: "none",
+                                    borderRadius: 6,
+                                    padding: "10px 20px",
+                                    cursor: "pointer",
+                                    fontSize: "1rem",
+                                    fontWeight: "500",
+                                    minWidth: "160px"
+                                }}
+                            >
+                                🖨️ พิมพ์รายงาน
+                            </button>
+                            <button
+                                onClick={deleteAllRecords}
+                                style={{
+                                    background: "#d32f2f",
+                                    color: "#fff",
+                                    border: "none",
+                                    borderRadius: 6,
+                                    padding: "10px 20px",
+                                    cursor: "pointer",
+                                    fontSize: "1rem",
+                                    fontWeight: "500",
+                                    minWidth: "160px"
+                                }}
+                            >
+                                🗑️ ลบข้อมูลทั้งวัน
+                            </button>
+                        </div>
+                        <div style={{ fontSize: "0.85rem", color: "#666", textAlign: "center" }}>
+                            💡 พิมพ์รายงานก่อนลบข้อมูล | ⚠️ การลบจะไม่สามารถกู้คืนได้
                         </div>
                     </div>
                 )}

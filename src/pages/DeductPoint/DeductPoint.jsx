@@ -176,16 +176,14 @@ export default function DeductPoint() {
         <div className="deduct-point-card">
           <h2>ตัดคะแนน</h2>
           
-          {/* แสดงข้อมูลผู้ใช้ที่ถูกส่งมา */}
-          {userName && (
+          {/* แสดงข้อมูลผู้ใช้แบบย่อ (ทั้งกรณีเข้าปกติและผ่านการสแกน) */}
+          {userid && currentPoint !== null && (
             <div className="user-info-display">
               <h3>👤 ข้อมูลผู้ใช้</h3>
               <div className="user-info-row">
-                <span><strong>ชื่อ:</strong> {userName}</span>
+                {userName && <span><strong>ชื่อ:</strong> {userName}</span>}
                 <span><strong>รหัส:</strong> {userid}</span>
-                {currentPoint !== null && (
-                  <span><strong>คะแนนคงเหลือ:</strong> <span className="current-points">{currentPoint}</span> คะแนน</span>
-                )}
+                <span><strong>คะแนนคงเหลือ:</strong> <span className="current-points">{currentPoint}</span> คะแนน</span>
               </div>
             </div>
           )}

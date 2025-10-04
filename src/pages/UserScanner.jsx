@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Html5QrcodeScanner, Html5QrcodeScanType } from 'html5-qrcode';
 import './UserScanner.css';
@@ -13,6 +13,8 @@ export default function UserScanner() {
     const [showManualInput, setShowManualInput] = useState(false);
     const [manualInput, setManualInput] = useState('');
     const [scannerReady, setScannerReady] = useState(false);
+    const scannerRef = useRef(null);
+    const scannerContainerRef = useRef(null);
 
     // Helper function สำหรับแปลงชื่อสาขา
     const getMajorName = (majorCode) => {
@@ -30,50 +32,47 @@ export default function UserScanner() {
         return majorMap[majorCode] || majorCode;
     };
 
+    // Mobile optimization state
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+    const [isScanning, setIsScanning] = useState(false);
+
+    // Detect mobile changes
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth <= 768);
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     // เริ่มต้น QR Scanner
     useEffect(() => {
-        const scanner = new Html5QrcodeScanner(
-            "user-qr-reader",
-            {
-                fps: 10,
-                qrbox: { width: 280, height: 280 },
-                aspectRatio: 1.0,
-                supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
-                showTorchButtonIfSupported: true,
-                showZoomSliderIfSupported: true
-            },
-            false
-        );
-
-        scanner.render(
-            (decodedText) => handleQRCodeScan(decodedText),
-            (error) => {
-                // Ignore scanning errors (they happen continuously)
-                if (!error.includes("No QR code found")) {
-                    console.warn("QR Code scanning error:", error);
-                }
-            }
-        );
-
-        setScannerInstance(scanner);
         setScannerReady(true);
-
         return () => {
-            if (scanner) {
-                scanner.clear().catch(console.error);
+            // Cleanup scanner เมื่อ component unmount
+            if (scannerRef.current) {
+                try {
+                    scannerRef.current.clear().catch(console.error);
+                } catch (error) {
+                    console.error('Error cleaning up scanner:', error);
+                }
+                scannerRef.current = null;
+            }
+            if (scannerContainerRef.current) {
+                scannerContainerRef.current.innerHTML = '';
             }
         };
     }, []);
 
-    // Effect สำหรับปิดกล้องเมื่อพบข้อมูลผู้ใช้
-    useEffect(() => {
-        if (userData && scannerInstance) {
-            console.log('User data detected, forcing camera stop...');
-            setTimeout(() => {
-                stopCamera();
-            }, 100);
-        }
-    }, [userData, scannerInstance]);
+    // Effect สำหรับปิดกล้องเมื่อพบข้อมูลผู้ใช้ (ปิดเพื่อแก้ปัญหา)
+    // useEffect(() => {
+    //     if (userData && scannerInstance) {
+    //         console.log('User data detected, forcing camera stop...');
+    //         setTimeout(() => {
+    //             stopCamera();
+    //         }, 100);
+    //     }
+    // }, [userData, scannerInstance]);
 
     // จัดการการสแกน QR Code
     const handleQRCodeScan = async (decodedText) => {
@@ -84,102 +83,84 @@ export default function UserScanner() {
             return;
         }
 
+        // หยุดกล้องทันทีเพื่อป้องกัน DOM conflict
+        await stopCamera();
+
         setUserQRCode(decodedText);
         setStatusMessage(`🔍 กำลังค้นหาข้อมูลผู้ใช้จากรหัส QR: ${decodedText}`);
         
         await fetchUserData(decodedText);
     };
 
-    // ปิดกล้อง Scanner
-    const stopCamera = () => {
-        console.log('Stopping camera...', { scannerInstance: !!scannerInstance });
-        
-        // บังคับหยุด video streams ทั้งหมดก่อน
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-            navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
-                stream.getTracks().forEach(track => {
-                    track.stop();
-                    console.log('Stopped video track:', track);
-                });
-            }).catch(() => {
-                // Ignore errors
-            });
-        }
-        
-        if (scannerInstance) {
+    // หยุดสแกน
+    const stopCamera = async () => {
+        if (scannerRef.current) {
             try {
-                // บังคับปิด scanner ทันที
-                scannerInstance.clear().then(() => {
-                    console.log('Camera cleared successfully');
-                }).catch((error) => {
-                    console.error('Error clearing camera:', error);
-                });
-                
-                // ตั้งค่า instance เป็น null ทันทีไม่ต้องรอ
-                setScannerInstance(null);
-                console.log('Scanner instance set to null');
-                
+                await scannerRef.current.clear();
+                console.log('Scanner cleared successfully');
             } catch (error) {
-                console.error('Error stopping camera:', error);
-                setScannerInstance(null); // บังคับให้เป็น null ถึงแม้จะมี error
+                console.error('Error clearing scanner:', error);
             }
+            scannerRef.current = null;
         }
         
-        // ลบ DOM element ของ scanner แบบ force
-        setTimeout(() => {
-            const scannerElement = document.getElementById('user-qr-reader');
-            if (scannerElement) {
-                scannerElement.innerHTML = '';
-                console.log('Cleared scanner DOM element');
-            }
-        }, 50);
+        if (scannerContainerRef.current) {
+            // Force clear the container
+            scannerContainerRef.current.innerHTML = '';
+        }
         
-        console.log('Camera stop process completed');
+        setScannerInstance(null);
+        setIsScanning(false);
     };
 
     // ดึงข้อมูลผู้ใช้จาก API
     const fetchUserData = async (searchTerm) => {
         setIsLoading(true);
+        console.log('Frontend: Searching for:', searchTerm);
+        
         try {
             // ตรวจสอบว่าเป็นตัวเลขหรือไม่ (User ID) หรือเป็นชื่อ
             const isNumeric = /^\d+$/.test(searchTerm.trim());
             const queryParam = isNumeric ? 'userQRCode' : 'userName';
+            const apiUrl = `/api/get-user-details?${queryParam}=${encodeURIComponent(searchTerm)}`;
             
-            const response = await fetch(`/api/get-user-details?${queryParam}=${encodeURIComponent(searchTerm)}`);
+            console.log('Frontend: API URL:', apiUrl);
+            console.log('Frontend: Search type:', isNumeric ? 'User ID' : 'User Name');
+            
+            const response = await fetch(apiUrl);
             const data = await response.json();
             
+            console.log('Frontend: API Response:', data);
+            
             if (data.success) {
-                setUserData({
-                    userid: data.userid || searchTerm,
-                    realname: data.realname,
-                    gunNumber: data.gunNumber || 'N/A',
-                    ...data // เผื่อมีข้อมูลเพิ่มเติม
-                });
-                
-                // ปิดกล้องอัตโนมัติเมื่อพบข้อมูลสำเร็จ
-                console.log('Found user data, stopping camera...');
-                
-                // บังคับปิดกล้องทันที
+                // ใช้ setTimeout เพื่อให้ React update state หลังจาก DOM เสถียร
                 setTimeout(() => {
-                    stopCamera();
+                    setUserData({
+                        userid: data.userid || searchTerm,
+                        realname: data.realname,
+                        gunNumber: data.gunNumber || 'N/A',
+                        ...data // เผื่อมีข้อมูลเพิ่มเติม
+                    });
+                    
                     setShowManualInput(false); // ซ่อนฟอร์มกรอกข้อมูลด้วยตนเอง
                     
-                    // Force re-render หลังจากปิดกล้อง
-                    setTimeout(() => {
-                        const searchType = isNumeric ? 'รหัสประจำตัว' : 'ชื่อผู้ใช้';
-                        setStatusMessage(`✅ พบข้อมูลผู้ใช้จาก${searchType}: ${data.realname} - กล้องถูกปิดแล้ว`);
-                    }, 200);
-                }, 10);
+                    const searchType = isNumeric ? 'รหัสประจำตัว' : 'ชื่อผู้ใช้';
+                    setStatusMessage(`✅ พบข้อมูลผู้ใช้จาก${searchType}: ${data.realname}`);
+                    
+                    console.log('Found user data successfully');
+                }, 100);
                 
             } else {
                 setUserData(null);
                 const searchType = isNumeric ? 'รหัสประจำตัว' : 'ชื่อผู้ใช้';
-                setStatusMessage(`❌ ไม่พบข้อมูลผู้ใช้จาก${searchType}: ${searchTerm}`);
+                const errorMsg = data.message || `ไม่พบข้อมูลผู้ใช้จาก${searchType}: ${searchTerm}`;
+                setStatusMessage(`❌ ${errorMsg}`);
+                console.log('Frontend: User not found:', errorMsg);
             }
         } catch (error) {
-            console.error('Error fetching user data:', error);
+            console.error('Frontend: Error fetching user data:', error);
             setUserData(null);
-            setStatusMessage('❌ เกิดข้อผิดพลาดในการเชื่อมต่อ');
+            setStatusMessage(`❌ เกิดข้อผิดพลาดในการเชื่อมต่อ: ${error.message}`);
         } finally {
             setIsLoading(false);
         }
@@ -202,50 +183,118 @@ export default function UserScanner() {
         }
     };
 
-    // เริ่มกล้อง Scanner ใหม่
-    const startCamera = () => {
-        if (!scannerInstance) {
-            const scanner = new Html5QrcodeScanner(
-                "user-qr-reader",
-                {
-                    fps: 10,
-                    qrbox: { width: 280, height: 280 },
-                    aspectRatio: 1.0,
-                    supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
-                    showTorchButtonIfSupported: true,
-                    showZoomSliderIfSupported: true
-                },
-                false
-            );
+    // เริ่มสแกน - ใช้ ref เพื่อป้องกัน React DOM conflict
+    const startCamera = async () => {
+        // ถ้ากำลัง scan อยู่แล้ว ให้หยุด
+        if (isScanning && scannerRef.current) {
+            await stopCamera();
+            return;
+        }
+        
+        if (!scannerContainerRef.current) {
+            console.error('Scanner container ref not available');
+            return;
+        }
+        
+        // ล้าง container ก่อน
+        scannerContainerRef.current.innerHTML = '';
+        
+        // ตรวจสอบ browser support ก่อน
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            setStatusMessage('เบราว์เซอร์ไม่รองรับการใช้กล้อง');
+            return;
+        }
 
-            scanner.render(
-                (decodedText) => handleQRCodeScan(decodedText),
-                (error) => {
-                    // Ignore scanning errors (they happen continuously)
-                    if (!error.includes("No QR code found")) {
-                        console.warn("QR Code scanning error:", error);
+        // ขอ permission กล้องก่อน
+        try {
+            await navigator.mediaDevices.getUserMedia({ 
+                video: { 
+                    facingMode: 'environment' // บังคับใช้กล้องหลังใน Android
+                } 
+            });
+        } catch (error) {
+            console.error('Camera permission error:', error);
+            setStatusMessage('ไม่สามารถเข้าถึงกล้องได้ กรุณาอนุญาตการใช้กล้อง');
+            return;
+        }
+
+        // Mobile-optimized scanner configuration
+        const scannerConfig = {
+            fps: isMobile ? 5 : 10,
+            qrbox: isMobile 
+                ? { width: Math.min(300, window.innerWidth - 40), height: Math.min(300, window.innerWidth - 40) }
+                : { width: 250, height: 250 },
+            aspectRatio: 1.0,
+            supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
+            videoConstraints: {
+                facingMode: 'environment',
+                width: isMobile ? { ideal: 640 } : { ideal: 1280 },
+                height: isMobile ? { ideal: 480 } : { ideal: 720 }
+            }
+        };
+
+        try {
+            // สร้าง unique ID สำหรับ scanner instance นี้
+            const uniqueId = `scanner-${Date.now()}`;
+            scannerContainerRef.current.id = uniqueId;
+            
+            const qrCodeScanner = new Html5QrcodeScanner(uniqueId, scannerConfig);
+            scannerRef.current = qrCodeScanner;
+            setScannerInstance(qrCodeScanner);
+            setIsScanning(true);
+
+            qrCodeScanner.render(
+                (decodedText) => {
+                    // Haptic feedback for mobile
+                    if (navigator.vibrate && isMobile) {
+                        navigator.vibrate(200);
+                    }
+                    
+                    console.log('QR Code scanned:', decodedText);
+                    handleQRCodeScan(decodedText);
+                },
+                (errorMessage) => {
+                    // Ignore common scanning errors
+                    if (!errorMessage.includes("No QR code found") && !errorMessage.includes("QR code parse error")) {
+                        console.log('Scan failed:', errorMessage);
+                        if (errorMessage.includes('NotAllowedError')) {
+                            setStatusMessage('ไม่ได้รับอนุญาตให้ใช้กล้อง');
+                        } else if (errorMessage.includes('NotFoundError')) {
+                            setStatusMessage('ไม่พบกล้อง');
+                        } else if (errorMessage.includes('NotReadableError')) {
+                            setStatusMessage('กล้องถูกใช้งานโดยแอปอื่น');
+                        }
                     }
                 }
             );
-
-            setScannerInstance(scanner);
+        } catch (error) {
+            console.error('Error starting scanner:', error);
+            setStatusMessage('เกิดข้อผิดพลาดในการเริ่มกล้อง');
+            setIsScanning(false);
         }
     };
 
     // รีเซ็ตข้อมูล
-    const resetData = () => {
+    const resetData = async () => {
+        console.log('Resetting data...');
+        
+        // รีเซ็ต state
         setUserQRCode('');
         setUserData(null);
         setStatusMessage('');
         setManualInput('');
         setShowManualInput(false);
+        setIsLoading(false);
         
-        // เริ่มกล้องใหม่หากยังไม่มี
-        if (!scannerInstance && scannerReady) {
-            setTimeout(() => {
+        // หยุดกล้องก่อน
+        await stopCamera();
+        
+        // เริ่มกล้องใหม่หลังจากหยุด
+        setTimeout(() => {
+            if (scannerReady && !showManualInput) {
                 startCamera();
-            }, 100);
-        }
+            }
+        }, 300);
     };
 
     // ไปหน้าตัดคะแนนพร้อม User ID
@@ -303,47 +352,72 @@ export default function UserScanner() {
                     </div>
                 ) : (
                     <div className="qr-scanner-wrapper">
-                        {scannerInstance ? (
-                            <div id="user-qr-reader" className="qr-reader"></div>
-                        ) : scannerReady ? (
-                            <div className="camera-stopped">
-                                <div className="camera-stopped-message">
-                                    📷 กล้องถูกปิดแล้ว
-                                    <p>กดปุ่มด้านล่างเพื่อเริ่มสแกนคนใหม่</p>
-                                </div>
-                                <button 
-                                    type="button" 
-                                    className="start-camera-btn"
-                                    onClick={() => {
-                                        console.log('Starting camera...');
-                                        startCamera();
-                                    }}
-                                >
-                                    🎥 เริ่มกล้องใหม่
-                                </button>
-                            </div>
-                        ) : (
-                            <div className="camera-loading">
-                                <div className="camera-loading-message">
-                                    📷 กำลังเริ่มต้นกล้อง...
-                                    <p>กรุณารอสักครู่</p>
-                                </div>
-                            </div>
+                        <div 
+                            ref={scannerContainerRef}
+                            id="user-qr-reader" 
+                            className="qr-reader"
+                            style={{ minHeight: isScanning ? '300px' : '50px' }}
+                        ></div>
+                        <button 
+                            onClick={() => startCamera()}
+                            className="qr-scan-btn"
+                            disabled={isLoading}
+                            style={{
+                                background: isLoading ? '#f3f4f6' : isScanning ? '#dc2626' : '#3b82f6',
+                                color: isLoading ? '#9ca3af' : 'white',
+                                border: '1px solid #d1d5db',
+                                borderRadius: '8px',
+                                padding: '12px 24px',
+                                cursor: isLoading ? 'not-allowed' : 'pointer',
+                                fontSize: '16px',
+                                fontWeight: '500',
+                                width: '100%',
+                                margin: '8px 0'
+                            }}
+                        >
+                            {isLoading 
+                                ? "🔄 กำลังเปิดกล้อง..." 
+                                : isScanning 
+                                    ? "🛑 หยุดสแกน QR Code" 
+                                    : "📷 เปิดกล้องสแกน QR Code"
+                            }
+                        </button>
+                        <div className="qr-help-text">
+                            💡 {isMobile 
+                                ? isScanning 
+                                    ? "📱 กล้องเปิดแล้ว - สแกน QR Code ของผู้ใช้" 
+                                    : "หมุนโทรศัพท์เป็นแนวตั้ง แล้วกดเปิดกล้องเพื่อสแกน"
+                                : isScanning 
+                                    ? "🎥 กล้องเปิดแล้ว - สแกน QR Code ของผู้ใช้ได้เลย"
+                                    : "กดปุ่มเพื่อเปิดกล้องสแกน QR Code ของผู้ใช้"
+                            }
+                        </div>
+                        
+                        {/* ปุ่มปิดกล้องเมื่อพบข้อมูลแล้ว */}
+                        {userData && isScanning && (
+                            <button 
+                                onClick={() => stopCamera()}
+                                style={{
+                                    background: '#10b981',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    padding: '10px 20px',
+                                    cursor: 'pointer',
+                                    fontSize: '14px',
+                                    fontWeight: '500',
+                                    width: '100%',
+                                    marginTop: '10px'
+                                }}
+                            >
+                                ✅ ปิดกล้อง (พบข้อมูลแล้ว)
+                            </button>
                         )}
-                        <div id="user-qr-reader" className="qr-reader"></div>
                     </div>
                 )}
             </div>
 
-            {/* Debug Info - ชั่วคราว */}
-            <div style={{background: '#f3f4f6', padding: '10px', borderRadius: '8px', margin: '10px 0', fontSize: '12px'}}>
-                <strong>Debug Info:</strong><br/>
-                Scanner Instance: {scannerInstance ? '✅ Active' : '❌ Inactive'}<br/>
-                Scanner Ready: {scannerReady ? '✅ Ready' : '❌ Not Ready'}<br/>
-                Show Manual Input: {showManualInput ? '✅ Yes' : '❌ No'}<br/>
-                User Data: {userData ? `✅ Loaded (${userData.realname})` : '❌ No Data'}<br/>
-                Should Show Button: {(!scannerInstance && scannerReady && !showManualInput) ? '✅ Yes' : '❌ No'}
-            </div>
+
 
             {/* Status Message */}
             {statusMessage && (
