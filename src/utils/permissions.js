@@ -197,6 +197,7 @@ export const getMenuItems = (user) => {
   // สำหรับ อาจารย์
   if (user.role === ROLES.TEACHER) {
     menuItems.push(
+      { path: '/user-scanner', label: 'ค้นหาข้อมูลผู้ใช้', icon: '🔍' },
       { path: '/Deductpoint', label: 'ตัดคะแนน', icon: '➖' },
       { path: '/summary', label: 'ดูสรุปยอด', icon: '📊' },
       { path: '/behavior-point', label: 'ดูคะแนนนักเรียน', icon: '⭐' }
@@ -206,6 +207,7 @@ export const getMenuItems = (user) => {
   // สำหรับ นายทหาร
   if (user.role === ROLES.OFFICER) {
     menuItems.push(
+      { path: '/user-scanner', label: 'ค้นหาข้อมูลผู้ใช้', icon: '🔍' },
       { path: '/Deductpoint', label: 'ตัดคะแนน', icon: '➖' },
       { path: '/gun-borrowing', label: 'คลังอาวุธ', icon: '🔫' },
       { path: '/summary', label: 'ดูสรุปยอด', icon: '📊' },
@@ -216,6 +218,7 @@ export const getMenuItems = (user) => {
   // สำหรับ แอดมิน
   if (user.role === ROLES.ADMIN || user.admin) {
     menuItems.push(
+      { path: '/user-scanner', label: 'ค้นหาข้อมูลผู้ใช้', icon: '🔍' },
       { path: '/role-manager', label: 'จัดการสิทธิ์ผู้ใช้', icon: '👥' },
       { path: '/Deductpoint', label: 'ตัดคะแนน', icon: '➖' },
       { path: '/gun-borrowing', label: 'คลังอาวุธ', icon: '🔫' },

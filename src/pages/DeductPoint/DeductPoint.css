@@ -102,6 +102,52 @@
   color: #1976d2;
 }
 
+/* User Info Display */
+.user-info-display {
+  background: #f0f5fa;
+  border: 2px solid #1976d2;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+.user-info-display h3 {
+  margin: 0 0 0.75rem 0;
+  color: #1976d2;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.user-info-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.user-info-row span {
+  font-size: 0.95rem;
+  color: #374151;
+}
+
+.current-points {
+  color: #dc2626;
+  font-weight: bold;
+}
+
+/* Readonly Input */
+.readonly-input {
+  background: #f3f4f6 !important;
+  color: #6b7280 !important;
+  cursor: not-allowed !important;
+  box-shadow: inset 2px 2px 4px #d1d5db, inset -2px -2px 4px #ffffff !important;
+}
+
+.readonly-input:focus {
+  box-shadow: inset 2px 2px 4px #d1d5db, inset -2px -2px 4px #ffffff !important;
+  background: #f3f4f6 !important;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .deduct-point-bg {
@@ -158,6 +204,24 @@
   .deduct-point-card .message {
     margin-top: 12px;
     font-size: 1rem;
+  }
+
+  .user-info-display {
+    padding: 12px;
+    margin-bottom: 16px;
+  }
+
+  .user-info-display h3 {
+    font-size: 1rem;
+    margin-bottom: 8px;
+  }
+
+  .user-info-row {
+    gap: 6px;
+  }
+
+  .user-info-row span {
+    font-size: 0.9rem;
   }
 }
 

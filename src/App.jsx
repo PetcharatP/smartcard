@@ -10,6 +10,7 @@ import DeductPoint from './pages/DeductPoint/DeductPoint';
 import EditProfile from './pages/EditProfile';
 import ViewProfile from './pages/ViewPofile.jsx';
 import GunBorrowing from './pages/GunBorrowing.jsx';
+import UserScanner from './pages/UserScanner.jsx';
 import Navbar from './components/Navbar';
 import Summary from './pages/Summary.jsx';
 import RoleManager from './pages/RoleManager.jsx';
@@ -60,6 +61,11 @@ function AppContent() {
         <Route path="/role-manager" element={<ProtectedRoleManager />} />
         <Route path="/dashboard" element={
             <Dashboard />
+        } />
+        <Route path="/user-scanner" element={
+          
+            <UserScanner />
+          
         } />
         <Route path="*" element={<h1>404 Not Found</h1>} />
       </Routes>

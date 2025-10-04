@@ -144,6 +144,21 @@ export default function GunBorrowing() {
             case 'gun_borrowed_by_other':
                 setStatusMessage(`⚠️ ปืนนี้ถูก ${errorData.existingRecord.realname} เบิกไว้แล้ว`);
                 break;
+            case 'unauthorized_gun_access':
+                setStatusMessage('🚫 ไม่สามารถเบิกปืนนี้ได้');
+                break;
+            case 'user_not_found':
+                setStatusMessage('❌ ไม่พบข้อมูลผู้ใช้ในระบบ');
+                break;
+            case 'gun_belongs_to_other_user':
+                setStatusMessage(`🚫 ปืนนี้เป็นของ ${errorData.validationDetails?.owner?.realname || 'ผู้ใช้คนอื่น'}`);
+                break;
+            case 'gun_not_in_system':
+                setStatusMessage('❌ ปืนนี้ไม่อยู่ในระบบ กรุณาติดต่อผู้ดูแล');
+                break;
+            case 'validation_error':
+                setStatusMessage('❌ เกิดข้อผิดพลาดในการตรวจสอบข้อมูล');
+                break;
             default:
                 setStatusMessage('⚠️ ข้อมูลซ้ำซ้อน');
         }

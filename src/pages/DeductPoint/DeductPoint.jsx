@@ -1,8 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import './DeductPoint.css';
 
 export default function DeductPoint() {
+  const location = useLocation();
   const [userid, setUserid] = useState('');
+  const [userName, setUserName] = useState('');
   const [change, setChange] = useState(-1);
   const [reason, setReason] = useState('');
   const [operator, setOperator] = useState('');
@@ -10,6 +13,22 @@ export default function DeductPoint() {
   const [type, setType] = useState('');
   const [violation, setViolation] = useState('');
   const apiUrl = process.env.NODE_ENV === 'production' ? '' : (import.meta.env.VITE_API_URL || '');
+
+  // ดึงข้อมูลจาก URL parameters เมื่อโหลดหน้า
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const urlUserId = searchParams.get('userId');
+    const urlUserName = searchParams.get('userName');
+    
+    if (urlUserId) {
+      setUserid(urlUserId);
+      fetchCurrentPoint(urlUserId);
+    }
+    
+    if (urlUserName) {
+      setUserName(decodeURIComponent(urlUserName));
+    }
+  }, [location.search]);
 
   // ประเภทความผิดและรายการ
   const violationTypes = [
@@ -119,6 +138,21 @@ export default function DeductPoint() {
         
         <div className="deduct-point-card">
           <h2>ตัดคะแนน</h2>
+          
+          {/* แสดงข้อมูลผู้ใช้ที่ถูกส่งมา */}
+          {userName && (
+            <div className="user-info-display">
+              <h3>👤 ข้อมูลผู้ใช้</h3>
+              <div className="user-info-row">
+                <span><strong>ชื่อ:</strong> {userName}</span>
+                <span><strong>รหัส:</strong> {userid}</span>
+                {currentPoint !== null && (
+                  <span><strong>คะแนนคงเหลือ:</strong> <span className="current-points">{currentPoint}</span> คะแนน</span>
+                )}
+              </div>
+            </div>
+          )}
+          
           <form onSubmit={handleSubmit}>
             <div>
               <label>
@@ -127,8 +161,11 @@ export default function DeductPoint() {
                   value={userid}
                   onChange={handleUseridChange}
                   required
+                  readOnly={!!userName}
+                  className={userName ? 'readonly-input' : ''}
+                  placeholder={userName ? 'ข้อมูลจากการสแกน' : 'กรอกรหัสนักเรียน'}
                 />
-                {currentPoint !== null && (
+                {!userName && currentPoint !== null && (
                   <span style={{marginLeft:8, color:'#2563eb', fontWeight:500}}>คะแนนคงเหลือ: {currentPoint}</span>
                 )}
               </label>
