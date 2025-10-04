@@ -12,6 +12,7 @@ export default function UserScanner() {
     const [isLoading, setIsLoading] = useState(false);
     const [showManualInput, setShowManualInput] = useState(false);
     const [manualInput, setManualInput] = useState('');
+    const [scannerReady, setScannerReady] = useState(false);
 
     // Helper function สำหรับแปลงชื่อสาขา
     const getMajorName = (majorCode) => {
@@ -55,6 +56,7 @@ export default function UserScanner() {
         );
 
         setScannerInstance(scanner);
+        setScannerReady(true);
 
         return () => {
             if (scanner) {
@@ -83,6 +85,7 @@ export default function UserScanner() {
         if (scannerInstance) {
             scannerInstance.clear().catch(console.error);
             setScannerInstance(null);
+            // scannerReady ยังคงเป็น true เพื่อแสดงปุ่มเริ่มกล้องใหม่
         }
     };
 
@@ -168,7 +171,7 @@ export default function UserScanner() {
         setShowManualInput(false);
         
         // เริ่มกล้องใหม่หากยังไม่มี
-        if (!scannerInstance) {
+        if (!scannerInstance && scannerReady) {
             setTimeout(() => {
                 startCamera();
             }, 100);
@@ -229,7 +232,7 @@ export default function UserScanner() {
                     <div className="qr-scanner-wrapper">
                         {scannerInstance ? (
                             <div id="user-qr-reader" className="qr-reader"></div>
-                        ) : (
+                        ) : scannerReady ? (
                             <div className="camera-stopped">
                                 <div className="camera-stopped-message">
                                     📷 กล้องถูกปิดแล้ว
@@ -246,10 +249,26 @@ export default function UserScanner() {
                                     🎥 เริ่มกล้องใหม่
                                 </button>
                             </div>
+                        ) : (
+                            <div className="camera-loading">
+                                <div className="camera-loading-message">
+                                    📷 กำลังเริ่มต้นกล้อง...
+                                    <p>กรุณารอสักครู่</p>
+                                </div>
+                            </div>
                         )}
-                        {!scannerInstance && <div id="user-qr-reader" className="qr-reader"></div>}
+                        <div id="user-qr-reader" className="qr-reader"></div>
                     </div>
                 )}
+            </div>
+
+            {/* Debug Info - ชั่วคราว */}
+            <div style={{background: '#f3f4f6', padding: '10px', borderRadius: '8px', margin: '10px 0', fontSize: '12px'}}>
+                <strong>Debug Info:</strong><br/>
+                Scanner Instance: {scannerInstance ? '✅ Active' : '❌ Inactive'}<br/>
+                Scanner Ready: {scannerReady ? '✅ Ready' : '❌ Not Ready'}<br/>
+                Show Manual Input: {showManualInput ? '✅ Yes' : '❌ No'}<br/>
+                User Data: {userData ? '✅ Loaded' : '❌ No Data'}
             </div>
 
             {/* Status Message */}
@@ -259,6 +278,7 @@ export default function UserScanner() {
                     {statusMessage}
                 </div>
             )}
+
 
             {/* Current Scanned QR */}
             {userQRCode && (

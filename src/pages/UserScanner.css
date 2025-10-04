@@ -177,6 +177,33 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+/* Camera Loading State */
+.camera-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 30px;
+  background: #fffbeb;
+  border: 2px dashed #f59e0b;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  min-height: 200px;
+  justify-content: center;
+}
+
+.camera-loading-message {
+  text-align: center;
+  color: #92400e;
+  font-size: 1.1rem;
+}
+
+.camera-loading-message p {
+  margin: 8px 0 0 0;
+  font-size: 0.9rem;
+  color: #d97706;
+}
+
 /* Status Message */
 .status-message {
   background: #f3f4f6;
@@ -506,5 +533,15 @@
     padding: 14px 20px;
     font-size: 1rem;
     min-width: 180px;
+  }
+
+  .camera-loading {
+    padding: 15px;
+    min-height: 120px;
+    gap: 15px;
+  }
+
+  .camera-loading-message {
+    font-size: 0.9rem;
   }
 }
