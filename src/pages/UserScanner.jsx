@@ -65,6 +65,16 @@ export default function UserScanner() {
         };
     }, []);
 
+    // Effect สำหรับปิดกล้องเมื่อพบข้อมูลผู้ใช้
+    useEffect(() => {
+        if (userData && scannerInstance) {
+            console.log('User data detected, forcing camera stop...');
+            setTimeout(() => {
+                stopCamera();
+            }, 100);
+        }
+    }, [userData, scannerInstance]);
+
     // จัดการการสแกน QR Code
     const handleQRCodeScan = async (decodedText) => {
         console.log('Scanned QR Code:', decodedText);
@@ -83,19 +93,48 @@ export default function UserScanner() {
     // ปิดกล้อง Scanner
     const stopCamera = () => {
         console.log('Stopping camera...', { scannerInstance: !!scannerInstance });
+        
+        // บังคับหยุด video streams ทั้งหมดก่อน
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+                stream.getTracks().forEach(track => {
+                    track.stop();
+                    console.log('Stopped video track:', track);
+                });
+            }).catch(() => {
+                // Ignore errors
+            });
+        }
+        
         if (scannerInstance) {
             try {
-                scannerInstance.clear();
+                // บังคับปิด scanner ทันที
+                scannerInstance.clear().then(() => {
+                    console.log('Camera cleared successfully');
+                }).catch((error) => {
+                    console.error('Error clearing camera:', error);
+                });
+                
+                // ตั้งค่า instance เป็น null ทันทีไม่ต้องรอ
                 setScannerInstance(null);
-                console.log('Camera stopped successfully');
-                // scannerReady ยังคงเป็น true เพื่อแสดงปุ่มเริ่มกล้องใหม่
+                console.log('Scanner instance set to null');
+                
             } catch (error) {
                 console.error('Error stopping camera:', error);
                 setScannerInstance(null); // บังคับให้เป็น null ถึงแม้จะมี error
             }
-        } else {
-            console.log('No scanner instance to stop');
         }
+        
+        // ลบ DOM element ของ scanner แบบ force
+        setTimeout(() => {
+            const scannerElement = document.getElementById('user-qr-reader');
+            if (scannerElement) {
+                scannerElement.innerHTML = '';
+                console.log('Cleared scanner DOM element');
+            }
+        }, 50);
+        
+        console.log('Camera stop process completed');
     };
 
     // ดึงข้อมูลผู้ใช้จาก API
@@ -115,13 +154,17 @@ export default function UserScanner() {
                 
                 // ปิดกล้องอัตโนมัติเมื่อพบข้อมูลสำเร็จ
                 console.log('Found user data, stopping camera...');
-                stopCamera();
-                setShowManualInput(false); // ซ่อนฟอร์มกรอกข้อมูลด้วยตนเอง
                 
-                // ใช้ setTimeout เพื่อให้แน่ใจว่า state ได้อัพเดท
+                // บังคับปิดกล้องทันที
                 setTimeout(() => {
-                    setStatusMessage(`✅ พบข้อมูลผู้ใช้: ${data.realname} - กล้องถูกปิดแล้ว`);
-                }, 100);
+                    stopCamera();
+                    setShowManualInput(false); // ซ่อนฟอร์มกรอกข้อมูลด้วยตนเอง
+                    
+                    // Force re-render หลังจากปิดกล้อง
+                    setTimeout(() => {
+                        setStatusMessage(`✅ พบข้อมูลผู้ใช้: ${data.realname} - กล้องถูกปิดแล้ว`);
+                    }, 200);
+                }, 10);
                 
             } else {
                 setUserData(null);
