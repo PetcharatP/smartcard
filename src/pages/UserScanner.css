@@ -114,12 +114,57 @@
 .qr-scanner-wrapper {
   display: flex;
   justify-content: center;
+  flex-direction: column;
+  align-items: center;
 }
 
 .qr-reader {
   max-width: 100%;
   border-radius: 8px;
   overflow: hidden;
+}
+
+/* Camera Stopped State */
+.camera-stopped {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 30px;
+  background: #f8fafc;
+  border: 2px dashed #cbd5e1;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.camera-stopped-message {
+  text-align: center;
+  color: #64748b;
+  font-size: 1.1rem;
+}
+
+.camera-stopped-message p {
+  margin: 8px 0 0 0;
+  font-size: 0.9rem;
+  color: #94a3b8;
+}
+
+.start-camera-btn {
+  background: #22c55e;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.start-camera-btn:hover {
+  background: #16a34a;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(34, 197, 94, 0.3);
 }
 
 /* Status Message */
@@ -382,6 +427,20 @@
   .manual-input, .search-btn {
     width: 100%;
     max-width: 300px;
+  }
+
+  .camera-stopped {
+    padding: 20px;
+    margin-bottom: 15px;
+  }
+
+  .camera-stopped-message {
+    font-size: 1rem;
+  }
+
+  .start-camera-btn {
+    padding: 10px 20px;
+    font-size: 0.9rem;
   }
   
   .user-data-row {

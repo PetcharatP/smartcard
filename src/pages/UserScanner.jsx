@@ -78,6 +78,14 @@ export default function UserScanner() {
         await fetchUserData(decodedText);
     };
 
+    // ปิดกล้อง Scanner
+    const stopCamera = () => {
+        if (scannerInstance) {
+            scannerInstance.clear().catch(console.error);
+            setScannerInstance(null);
+        }
+    };
+
     // ดึงข้อมูลผู้ใช้จาก API
     const fetchUserData = async (qrCode) => {
         setIsLoading(true);
@@ -92,7 +100,12 @@ export default function UserScanner() {
                     gunNumber: data.gunNumber || 'N/A',
                     ...data // เผื่อมีข้อมูลเพิ่มเติม
                 });
-                setStatusMessage(`✅ พบข้อมูลผู้ใช้: ${data.realname}`);
+                setStatusMessage(`✅ พบข้อมูลผู้ใช้: ${data.realname} - กล้องถูกปิดแล้ว`);
+                
+                // ปิดกล้องอัตโนมัติเมื่อพบข้อมูลสำเร็จ
+                stopCamera();
+                setShowManualInput(false); // ซ่อนฟอร์มกรอกข้อมูลด้วยตนเอง
+                
             } else {
                 setUserData(null);
                 setStatusMessage(`❌ ไม่พบข้อมูลผู้ใช้: ${qrCode}`);
@@ -116,12 +129,50 @@ export default function UserScanner() {
         }
     };
 
+    // เริ่มกล้อง Scanner ใหม่
+    const startCamera = () => {
+        if (!scannerInstance) {
+            const scanner = new Html5QrcodeScanner(
+                "user-qr-reader",
+                {
+                    fps: 10,
+                    qrbox: { width: 280, height: 280 },
+                    aspectRatio: 1.0,
+                    supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
+                    showTorchButtonIfSupported: true,
+                    showZoomSliderIfSupported: true
+                },
+                false
+            );
+
+            scanner.render(
+                (decodedText) => handleQRCodeScan(decodedText),
+                (error) => {
+                    // Ignore scanning errors (they happen continuously)
+                    if (!error.includes("No QR code found")) {
+                        console.warn("QR Code scanning error:", error);
+                    }
+                }
+            );
+
+            setScannerInstance(scanner);
+        }
+    };
+
     // รีเซ็ตข้อมูล
     const resetData = () => {
         setUserQRCode('');
         setUserData(null);
         setStatusMessage('');
         setManualInput('');
+        setShowManualInput(false);
+        
+        // เริ่มกล้องใหม่หากยังไม่มี
+        if (!scannerInstance) {
+            setTimeout(() => {
+                startCamera();
+            }, 100);
+        }
     };
 
     // ไปหน้าตัดคะแนนพร้อม User ID
@@ -176,7 +227,24 @@ export default function UserScanner() {
                     </div>
                 ) : (
                     <div className="qr-scanner-wrapper">
-                        <div id="user-qr-reader" className="qr-reader"></div>
+                        {scannerInstance ? (
+                            <div id="user-qr-reader" className="qr-reader"></div>
+                        ) : (
+                            <div className="camera-stopped">
+                                <div className="camera-stopped-message">
+                                    📷 กล้องถูกปิดแล้ว
+                                    <p>กดปุ่มด้านล่างเพื่อเริ่มสแกนคนใหม่</p>
+                                </div>
+                                <button 
+                                    type="button" 
+                                    className="start-camera-btn"
+                                    onClick={startCamera}
+                                >
+                                    🎥 เริ่มกล้องใหม่
+                                </button>
+                                <div id="user-qr-reader" className="qr-reader"></div>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
@@ -330,7 +398,9 @@ export default function UserScanner() {
                 <h3>📋 คำแนะนำการใช้งาน</h3>
                 <ul>
                     <li>🎯 วางกล้องให้มองเห็น QR Code ของผู้ใช้ชัดเจน</li>
-                    <li>💡 หากไม่สามารถสแกนได้ ให้กดปุ่ม "กรอกข้อมูลเอง"</li>
+                    <li>� เมื่อสแกนสำเร็จ กล้องจะปิดอัตโนมัติเพื่อประหยัดแบตเตอรี่</li>
+                    <li>🎥 กดปุ่ม "เริ่มกล้องใหม่" หากต้องการสแกนคนต่อไป</li>
+                    <li>�💡 หากไม่สามารถสแกนได้ ให้กดปุ่ม "กรอกข้อมูลเอง"</li>
                     <li>🔄 กดปุ่ม "รีเซ็ต" เพื่อเริ่มค้นหาผู้ใช้คนใหม่</li>
                     <li>📱 หากใช้มือถือ อาจต้องอนุญาตการเข้าถึงกล้อง</li>
                 </ul>
