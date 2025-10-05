@@ -91,12 +91,28 @@ export default function Auth() {
   const handleRegister = async e => {
     e.preventDefault();
     setRegisterError('');
+    
+    // ตรวจสอบข้อมูลที่กรอก
     if (!registerUser || !registerPass || !registerPass2 || !registerName || !registerCitizenId || !registerBlood) {
       setRegisterError('กรุณากรอกข้อมูลให้ครบ');
       return;
     }
+    
+    // ตรวจสอบรหัสผ่าน
     if (registerPass !== registerPass2) {
       setRegisterError('รหัสผ่านไม่ตรงกัน');
+      return;
+    }
+    
+    // ตรวจสอบรหัสประจำตัวประชาชน
+    if (!/^\d{13}$/.test(registerCitizenId)) {
+      setRegisterError('รหัสประจำตัวประชาชนต้องเป็นตัวเลข 13 หลัก');
+      return;
+    }
+    
+    // ตรวจสอบความแข็งแกร่งของรหัสผ่าน
+    if (registerPass.length < 6) {
+      setRegisterError('รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร');
       return;
     }
     try {
@@ -112,11 +128,22 @@ export default function Auth() {
         }),
       });
       const data = await res.json();
+      console.log('Register response:', data);
+      
       if (res.ok) {
-        alert('สมัครสมาชิกสำเร็จ');
+        alert('สมัครสมาชิกสำเร็จ! กรุณาเข้าสู่ระบบ');
+        // ล้างฟอร์ม
+        setRegisterUser('');
+        setRegisterName('');
+        setRegisterCitizenId('');
+        setRegisterPass('');
+        setRegisterPass2('');
+        setRegisterBlood('');
         setTab('login');
       } else {
-        setRegisterError(data.error || data.message || 'สมัครสมาชิกไม่สำเร็จ');
+        const errorMessage = data.message || data.error || 'สมัครสมาชิกไม่สำเร็จ กรุณาลองใหม่อีกครั้ง';
+        setRegisterError(errorMessage);
+        console.error('Registration error:', errorMessage);
       }
     } catch {
       setRegisterError('เกิดข้อผิดพลาด');
@@ -192,9 +219,17 @@ export default function Auth() {
           />
           <input
             type="text"
-            placeholder="รหัสประจำตัวประชาชน"
+            placeholder="รหัสประจำตัวประชาชน (13 หลัก)"
             value={registerCitizenId}
-            onChange={e => setRegisterCitizenId(e.target.value)}
+            onChange={e => {
+              const value = e.target.value.replace(/\D/g, ''); // เอาตัวอักษรที่ไม่ใช่ตัวเลขออก
+              if (value.length <= 13) {
+                setRegisterCitizenId(value);
+              }
+            }}
+            maxLength={13}
+            pattern="\d{13}"
+            title="กรุณากรอกตัวเลข 13 หลัก"
             required
           />
           <input
