@@ -297,14 +297,14 @@ export default function GunBorrowing() {
         }
     };
 
-    // Print daily report
+    // Print daily report as PDF
     const printDailyReport = () => {
         if (!savedRecords.all || savedRecords.all.length === 0) {
             alert('ไม่มีข้อมูลสำหรับพิมพ์ในวันที่เลือก');
             return;
         }
 
-        // สร้างหน้าใหม่สำหรับพิมพ์
+        // สร้างหน้าใหม่สำหรับ PDF
         const printWindow = window.open('', '_blank');
         
         // ฟังก์ชันแปลงเวลาเป็นรูปแบบ ชม.:นาที
@@ -559,6 +559,9 @@ export default function GunBorrowing() {
                     body { 
                         margin: 0; 
                         font-size: 12px;
+                        background: white;
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
                     }
                     .section { 
                         page-break-inside: avoid; 
@@ -566,10 +569,38 @@ export default function GunBorrowing() {
                     table {
                         min-width: auto;
                         width: 100%;
+                        border-collapse: collapse;
                     }
                     th, td {
                         font-size: 10px;
                         padding: 4px;
+                        border: 1px solid #333 !important;
+                    }
+                    th {
+                        background-color: #f0f0f0 !important;
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
+                    }
+                    .header {
+                        border-bottom: 2px solid #333 !important;
+                    }
+                    .summary {
+                        border: 1px solid #333 !important;
+                        background-color: #f8f9fa !important;
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
+                    }
+                    .section h3 {
+                        background-color: #333 !important;
+                        color: white !important;
+                        -webkit-print-color-adjust: exact;
+                        print-color-adjust: exact;
+                    }
+                    button, .instruction-bar {
+                        display: none !important;
+                    }
+                    div[style*="position: fixed"] {
+                        display: none !important;
                     }
                 }
             </style>
@@ -693,10 +724,75 @@ export default function GunBorrowing() {
         printWindow.document.write(printContent);
         printWindow.document.close();
         
-        // รอให้เนื้อหาโหลดเสร็จแล้วค่อยพิมพ์
+        // รอให้เนื้อหาโหลดเสร็จแล้วสร้าง PDF
         printWindow.onload = function() {
             setTimeout(() => {
-                printWindow.print();
+                // เพิ่มป้ายแจ้งเตือนสำหรับการบันทึก PDF
+                const instructionDiv = printWindow.document.createElement('div');
+                instructionDiv.className = 'instruction-bar';
+                instructionDiv.innerHTML = `
+                    <div class="instruction-bar" style="
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        right: 0;
+                        background: #1976d2;
+                        color: white;
+                        padding: 10px;
+                        text-align: center;
+                        z-index: 1000;
+                        font-size: 14px;
+                        font-weight: bold;
+                        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+                        border-bottom: 3px solid #0d47a1;
+                    ">
+                        📄 คลิก "บันทึกเป็น PDF" ในหน้าพิมพ์เพื่อดาวน์โหลดไฟล์ PDF หรือกด Ctrl+P
+                    </div>
+                `;
+                
+                printWindow.document.body.appendChild(instructionDiv);
+                
+                // เพิ่มปุ่มสำหรับสร้าง PDF
+                const pdfButton = printWindow.document.createElement('button');
+                pdfButton.innerHTML = '📄 บันทึกเป็น PDF';
+                pdfButton.style.cssText = `
+                    position: fixed;
+                    top: 60px;
+                    right: 10px;
+                    z-index: 1001;
+                    background: #2e7d32;
+                    color: white;
+                    border: none;
+                    padding: 12px 24px;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    font-size: 16px;
+                    font-weight: bold;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                    transition: all 0.3s ease;
+                `;
+                
+                pdfButton.onmouseover = function() {
+                    this.style.background = '#1b5e20';
+                    this.style.transform = 'scale(1.05)';
+                };
+                
+                pdfButton.onmouseout = function() {
+                    this.style.background = '#2e7d32';
+                    this.style.transform = 'scale(1)';
+                };
+                
+                pdfButton.onclick = function() {
+                    // ใช้ window.print() แต่เปิด dialog บันทึกเป็น PDF
+                    printWindow.print();
+                };
+                
+                printWindow.document.body.appendChild(pdfButton);
+                
+                // เปิด dialog บันทึก PDF อัตโนมัติ
+                setTimeout(() => {
+                    printWindow.print();
+                }, 500);
             }, 500);
         };
     };
@@ -1533,7 +1629,7 @@ export default function GunBorrowing() {
                                     minWidth: "160px"
                                 }}
                             >
-                                🖨️ พิมพ์รายงาน
+                                � สร้าง PDF
                             </button>
                             <button
                                 onClick={deleteAllRecords}
