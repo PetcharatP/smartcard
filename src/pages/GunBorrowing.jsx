@@ -771,87 +771,88 @@ export default function GunBorrowing() {
         printWindow.document.write(printContent);
         printWindow.document.close();
         
-        // ตรวจสอบว่าเป็นมือถือหรือไม่
+        // ตรวจสอบว่าเป็นมือถือหรือไม่ - ย้ายออกมาข้างนอก
         const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        console.log('📱 Mobile Detection:', isMobileDevice);
         
         // รอให้เนื้อหาโหลดเสร็จแล้วสร้าง PDF
-        printWindow.onload = function() {
-            setTimeout(() => {
-                if (isMobileDevice) {
-                    // สำหรับมือถือ: เปิด PDF dialog ทันทีโดยไม่ต้องแสดงปุ่ม
-                    printWindow.print();
-                } else {
-                    // สำหรับคอมพิวเตอร์: แสดงป้ายแจ้งเตือนและปุ่ม
-                    const instructionDiv = printWindow.document.createElement('div');
-                    instructionDiv.className = 'instruction-bar';
-                    instructionDiv.innerHTML = `
-                        <div class="instruction-bar" style="
-                            position: fixed;
-                            top: 0;
-                            left: 0;
-                            right: 0;
-                            background: #1976d2;
-                            color: white;
-                            padding: 10px 5px;
-                            text-align: center;
-                            z-index: 1000;
-                            font-size: 12px;
-                            font-weight: bold;
-                            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-                            border-bottom: 3px solid #0d47a1;
-                            line-height: 1.3;
-                        ">
-                            <div style="display: flex; flex-direction: column; align-items: center; gap: 5px;">
-                                <div>📄 เลือก 'Save as PDF' ในเมนูพิมพ์</div>
-                                <div style="font-size: 10px; opacity: 0.9;">💻 กด Ctrl+P หรือคลิกปุ่มด้านล่าง</div>
-                            </div>
-                        </div>
-                    `;
-                    
-                    printWindow.document.body.appendChild(instructionDiv);
-                    // เพิ่มปุ่มสำหรับสร้าง PDF (เฉพาะคอมพิวเตอร์)
-                    const pdfButton = printWindow.document.createElement('button');
-                    pdfButton.innerHTML = '📄 บันทึก PDF';
-                    pdfButton.style.cssText = `
+        setTimeout(() => {
+            if (isMobileDevice) {
+                // สำหรับมือถือ: เปิด PDF dialog ทันทีโดยไม่ต้องรอ
+                console.log('📱 Opening PDF dialog for mobile...');
+                printWindow.print();
+            } else {
+                // สำหรับคอมพิวเตอร์: แสดงป้ายแจ้งเตือนและปุ่ม
+                console.log('💻 Setting up desktop PDF interface...');
+                const instructionDiv = printWindow.document.createElement('div');
+                instructionDiv.className = 'instruction-bar';
+                instructionDiv.innerHTML = `
+                    <div class="instruction-bar" style="
                         position: fixed;
-                        top: 80px;
-                        right: 10px;
-                        z-index: 1001;
-                        background: #2e7d32;
+                        top: 0;
+                        left: 0;
+                        right: 0;
+                        background: #1976d2;
                         color: white;
-                        border: none;
-                        padding: 12px 24px;
-                        border-radius: 8px;
-                        cursor: pointer;
-                        font-size: 16px;
+                        padding: 10px 5px;
+                        text-align: center;
+                        z-index: 1000;
+                        font-size: 12px;
                         font-weight: bold;
-                        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-                        transition: all 0.3s ease;
-                    `;
-                    
-                    pdfButton.onmouseover = function() {
-                        this.style.background = '#1b5e20';
-                        this.style.transform = 'scale(1.05)';
-                    };
-                    
-                    pdfButton.onmouseout = function() {
-                        this.style.background = '#2e7d32';
-                        this.style.transform = 'scale(1)';
-                    };
-                    
-                    pdfButton.onclick = function() {
-                        printWindow.print();
-                    };
-                    
-                    printWindow.document.body.appendChild(pdfButton);
-                    
-                    // เปิด dialog บันทึก PDF อัตโนมัติสำหรับคอมพิวเตอร์
-                    setTimeout(() => {
-                        printWindow.print();
-                    }, 500);
-                }
-            }, 500);
-        };
+                        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+                        border-bottom: 3px solid #0d47a1;
+                        line-height: 1.3;
+                    ">
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 5px;">
+                            <div>📄 เลือก 'Save as PDF' ในเมนูพิมพ์</div>
+                            <div style="font-size: 10px; opacity: 0.9;">💻 กด Ctrl+P หรือคลิกปุ่มด้านล่าง</div>
+                        </div>
+                    </div>
+                `;
+                
+                printWindow.document.body.appendChild(instructionDiv);
+                // เพิ่มปุ่มสำหรับสร้าง PDF (เฉพาะคอมพิวเตอร์)
+                const pdfButton = printWindow.document.createElement('button');
+                pdfButton.innerHTML = '📄 บันทึก PDF';
+                pdfButton.style.cssText = `
+                    position: fixed;
+                    top: 80px;
+                    right: 10px;
+                    z-index: 1001;
+                    background: #2e7d32;
+                    color: white;
+                    border: none;
+                    padding: 12px 24px;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    font-size: 16px;
+                    font-weight: bold;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                    transition: all 0.3s ease;
+                `;
+                
+                pdfButton.onmouseover = function() {
+                    this.style.background = '#1b5e20';
+                    this.style.transform = 'scale(1.05)';
+                };
+                
+                pdfButton.onmouseout = function() {
+                    this.style.background = '#2e7d32';
+                    this.style.transform = 'scale(1)';
+                };
+                
+                pdfButton.onclick = function() {
+                    printWindow.print();
+                };
+                
+                printWindow.document.body.appendChild(pdfButton);
+                
+                // เปิด dialog บันทึก PDF อัตโนมัติสำหรับคอมพิวเตอร์
+                setTimeout(() => {
+                    printWindow.print();
+                }, 500);
+            }
+        }, 300);
     };
 
     // Add public gun
@@ -1707,7 +1708,8 @@ export default function GunBorrowing() {
                         </div>
                         <div style={{ fontSize: "0.85rem", color: "#666", textAlign: "center" }}>
                             💡 พิมพ์รายงานก่อนลบข้อมูล | ⚠️ การลบจะไม่สามารถกู้คืนได้<br/>
-                            📱 <strong>สำหรับมือถือ:</strong> ระบบจะเปิดหน้าบันทึก PDF อัตโนมัติ เลือก "Save as PDF" เพื่อดาวน์โหลด
+                            📱 <strong>มือถือ:</strong> กดปุ่ม "📄 สร้าง PDF" แล้วหน้าบันทึก PDF จะเปิดทันที<br/>
+                            💻 <strong>คอมพิวเตอร์:</strong> หน้าใหม่จะแสดงคำแนะนำและปุ่มบันทึก PDF
                         </div>
                     </div>
                 )}
