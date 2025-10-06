@@ -337,7 +337,10 @@ export default function GunBorrowing() {
         <html>
         <head>
             <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=3.0">
+            <meta name="mobile-web-app-capable" content="yes">
+            <meta name="apple-mobile-web-app-capable" content="yes">
+            <meta name="format-detection" content="telephone=no">
             <title>รายงานการเบิก-คืนปืน วันที่ ${formatDateThai(currentDate)}</title>
             <style>
                 body {
@@ -542,16 +545,32 @@ export default function GunBorrowing() {
                         padding: 5px 8px;
                     }
                     table {
-                        min-width: 500px;
-                        font-size: 10px;
+                        min-width: 100%;
+                        font-size: 9px;
+                        width: 100%;
                     }
                     th, td {
-                        padding: 3px 4px;
-                        font-size: 10px;
+                        padding: 2px 3px;
+                        font-size: 9px;
+                        word-break: break-all;
+                        max-width: 60px;
                     }
                     .time-col {
-                        font-size: 9px;
+                        font-size: 8px;
                     }
+                    .status-returned, .status-borrowed {
+                        font-size: 8px;
+                    }
+                    /* Mobile table optimization */
+                    .table-container {
+                        font-size: 8px;
+                    }
+                    th:nth-child(1), td:nth-child(1) { width: 8%; } /* ลำดับ */
+                    th:nth-child(2), td:nth-child(2) { width: 35%; } /* ชื่อ */
+                    th:nth-child(3), td:nth-child(3) { width: 15%; } /* ปืน */
+                    th:nth-child(4), td:nth-child(4) { width: 18%; } /* เวลาเบิก */
+                    th:nth-child(5), td:nth-child(5) { width: 18%; } /* เวลาคืน */
+                    th:nth-child(6), td:nth-child(6) { width: 6%; } /* สถานะ */
                 }
                 
                 @media print {
@@ -562,6 +581,8 @@ export default function GunBorrowing() {
                         background: white;
                         -webkit-print-color-adjust: exact;
                         print-color-adjust: exact;
+                        width: 100%;
+                        max-width: none;
                     }
                     .section { 
                         page-break-inside: avoid; 
@@ -570,25 +591,31 @@ export default function GunBorrowing() {
                         min-width: auto;
                         width: 100%;
                         border-collapse: collapse;
+                        font-size: 10px;
                     }
                     th, td {
                         font-size: 10px;
                         padding: 4px;
                         border: 1px solid #333 !important;
+                        word-wrap: break-word;
+                        overflow-wrap: break-word;
                     }
                     th {
                         background-color: #f0f0f0 !important;
                         -webkit-print-color-adjust: exact;
                         print-color-adjust: exact;
+                        font-weight: bold;
                     }
                     .header {
                         border-bottom: 2px solid #333 !important;
+                        text-align: center;
                     }
                     .summary {
                         border: 1px solid #333 !important;
                         background-color: #f8f9fa !important;
                         -webkit-print-color-adjust: exact;
                         print-color-adjust: exact;
+                        page-break-inside: avoid;
                     }
                     .section h3 {
                         background-color: #333 !important;
@@ -601,6 +628,26 @@ export default function GunBorrowing() {
                     }
                     div[style*="position: fixed"] {
                         display: none !important;
+                    }
+                    .table-container {
+                        overflow: visible !important;
+                    }
+                    /* Mobile PDF optimizations */
+                    @page {
+                        size: A4;
+                        margin: 0.5in;
+                    }
+                    .summary-stats {
+                        flex-direction: row !important;
+                        justify-content: space-around !important;
+                    }
+                    .stat-item {
+                        margin: 2px !important;
+                        min-width: 60px !important;
+                    }
+                    .time-col {
+                        font-size: 9px !important;
+                        white-space: nowrap;
                     }
                 }
             </style>
@@ -727,7 +774,7 @@ export default function GunBorrowing() {
         // รอให้เนื้อหาโหลดเสร็จแล้วสร้าง PDF
         printWindow.onload = function() {
             setTimeout(() => {
-                // เพิ่มป้ายแจ้งเตือนสำหรับการบันทึก PDF
+                // เพิ่มป้ายแจ้งเตือนสำหรับการบันทึก PDF (รองรับมือถือ)
                 const instructionDiv = printWindow.document.createElement('div');
                 instructionDiv.className = 'instruction-bar';
                 instructionDiv.innerHTML = `
@@ -738,26 +785,50 @@ export default function GunBorrowing() {
                         right: 0;
                         background: #1976d2;
                         color: white;
-                        padding: 10px;
+                        padding: 10px 5px;
                         text-align: center;
                         z-index: 1000;
-                        font-size: 14px;
+                        font-size: 12px;
                         font-weight: bold;
                         box-shadow: 0 2px 10px rgba(0,0,0,0.3);
                         border-bottom: 3px solid #0d47a1;
+                        line-height: 1.3;
                     ">
-                        📄 คลิก "บันทึกเป็น PDF" ในหน้าพิมพ์เพื่อดาวน์โหลดไฟล์ PDF หรือกด Ctrl+P
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 5px;">
+                            <div>📄 สำหรับมือถือ: เลือก 'Save as PDF' ในเมนูพิมพ์</div>
+                            <div style="font-size: 10px; opacity: 0.9;">💻 คอมพิวเตอร์: กด Ctrl+P แล้วเลือก 'Save as PDF'</div>
+                        </div>
                     </div>
                 `;
                 
                 printWindow.document.body.appendChild(instructionDiv);
                 
-                // เพิ่มปุ่มสำหรับสร้าง PDF
+                // เพิ่มปุ่มสำหรับสร้าง PDF (รองรับมือถือ)
                 const pdfButton = printWindow.document.createElement('button');
-                pdfButton.innerHTML = '📄 บันทึกเป็น PDF';
-                pdfButton.style.cssText = `
+                pdfButton.innerHTML = '📄 บันทึก PDF';
+                
+                const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                const buttonStyle = isMobileDevice ? `
                     position: fixed;
-                    top: 60px;
+                    bottom: 20px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    z-index: 1001;
+                    background: #2e7d32;
+                    color: white;
+                    border: none;
+                    padding: 15px 30px;
+                    border-radius: 25px;
+                    cursor: pointer;
+                    font-size: 18px;
+                    font-weight: bold;
+                    box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+                    transition: all 0.3s ease;
+                    min-width: 200px;
+                    touch-action: manipulation;
+                ` : `
+                    position: fixed;
+                    top: 80px;
                     right: 10px;
                     z-index: 1001;
                     background: #2e7d32;
@@ -772,6 +843,8 @@ export default function GunBorrowing() {
                     transition: all 0.3s ease;
                 `;
                 
+                pdfButton.style.cssText = buttonStyle;
+                
                 pdfButton.onmouseover = function() {
                     this.style.background = '#1b5e20';
                     this.style.transform = 'scale(1.05)';
@@ -783,8 +856,58 @@ export default function GunBorrowing() {
                 };
                 
                 pdfButton.onclick = function() {
-                    // ใช้ window.print() แต่เปิด dialog บันทึกเป็น PDF
-                    printWindow.print();
+                    // Mobile-optimized PDF generation
+                    if (isMobileDevice) {
+                        // Add mobile-specific instructions
+                        const mobileAlert = printWindow.document.createElement('div');
+                        mobileAlert.style.cssText = `
+                            position: fixed;
+                            top: 50%;
+                            left: 50%;
+                            transform: translate(-50%, -50%);
+                            background: rgba(0,0,0,0.9);
+                            color: white;
+                            padding: 20px;
+                            border-radius: 10px;
+                            z-index: 2000;
+                            text-align: center;
+                            font-size: 14px;
+                            max-width: 90%;
+                            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+                        `;
+                        mobileAlert.innerHTML = `
+                            <div style="margin-bottom: 15px;">📱 คำแนะนำสำหรับมือถือ</div>
+                            <div style="font-size: 12px; line-height: 1.4;">
+                                1. กดปุ่ม "พิมพ์" ด้านล่าง<br/>
+                                2. เลือก "Save as PDF" หรือ "บันทึกเป็น PDF"<br/>
+                                3. เลือกตำแหน่งที่จะบันทึกไฟล์<br/>
+                                4. กดยืนยันเพื่อดาวน์โหลด PDF
+                            </div>
+                            <button onclick="this.parentElement.remove();" style="
+                                background: #2e7d32; 
+                                color: white; 
+                                border: none; 
+                                padding: 10px 20px; 
+                                border-radius: 5px; 
+                                margin-top: 15px;
+                                cursor: pointer;
+                                font-size: 14px;
+                            ">เข้าใจแล้ว - เริ่มพิมพ์</button>
+                        `;
+                        
+                        printWindow.document.body.appendChild(mobileAlert);
+                        
+                        // Auto-remove alert and trigger print after 3 seconds
+                        setTimeout(() => {
+                            if (mobileAlert.parentElement) {
+                                mobileAlert.remove();
+                            }
+                            printWindow.print();
+                        }, 3000);
+                    } else {
+                        // Desktop - immediate print
+                        printWindow.print();
+                    }
                 };
                 
                 printWindow.document.body.appendChild(pdfButton);
@@ -1649,7 +1772,8 @@ export default function GunBorrowing() {
                             </button>
                         </div>
                         <div style={{ fontSize: "0.85rem", color: "#666", textAlign: "center" }}>
-                            💡 พิมพ์รายงานก่อนลบข้อมูล | ⚠️ การลบจะไม่สามารถกู้คืนได้
+                            💡 พิมพ์รายงานก่อนลบข้อมูล | ⚠️ การลบจะไม่สามารถกู้คืนได้<br/>
+                            📱 <strong>สำหรับมือถือ:</strong> เมื่อกดสร้าง PDF แล้ว ให้เลือก "Save as PDF" ในเมนูตัวเลือกการพิมพ์
                         </div>
                     </div>
                 )}
