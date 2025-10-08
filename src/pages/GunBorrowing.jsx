@@ -1227,7 +1227,7 @@ export default function GunBorrowing() {
                         <label className="qr-label">
                             สแกน QR Code (User หรือ Gun)
                         </label>
-                        <div id="qr-reader" className="qr-reader"></div>
+                        <div id="qr-reader" className={`qr-reader ${isScanning ? 'qr-reader-active' : ''}`}></div>
                         <button 
                             onClick={() => startScanner()}
                             className="qr-scan-btn"
