@@ -912,9 +912,48 @@ export default function GunBorrowing() {
         }
     };
 
+    // ฟังก์ชันเล่นเสียงแจ้งเตือน
+    const playSuccessSound = () => {
+        try {
+            // สร้าง Audio context สำหรับเสียงแจ้งเตือน
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            
+            // สร้างเสียงแจ้งเตือนแบบ beep ง่ายๆ
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            // ตั้งค่าเสียง - โทนสูงสำหรับการแจ้งเตือนที่ชัดเจน
+            oscillator.frequency.setValueAtTime(800, audioContext.currentTime); // 800Hz
+            oscillator.type = 'sine';
+            
+            // ปรับระดับเสียงให้ไม่ดังเกินไป
+            gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.1);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+            
+            // เล่นเสียง
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.4);
+            
+            console.log('🔊 Success sound played');
+        } catch (error) {
+            console.log('Audio not supported or blocked:', error);
+            // Fallback: ใช้ vibration หากรองรับ
+            if (navigator.vibrate) {
+                navigator.vibrate([200, 100, 200]);
+            }
+        }
+    };
+
     // สแกน QR - แยกแยะอัตโนมัติ
     const handleQRCodeScan = async (decodedText) => {
         console.log('Scanned QR Code:', decodedText);
+        
+        // เล่นเสียงแจ้งเตือนทันที
+        playSuccessSound();
         
         // ตรวจสอบรูปแบบ QR Code เพื่อแยกแยะว่าเป็น User หรือ Gun
         const isUserQR = await isUserQRCode(decodedText);
