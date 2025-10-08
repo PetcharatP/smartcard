@@ -1059,18 +1059,46 @@ export default function GunBorrowing() {
             return;
         }
 
-        // Mobile-optimized scanner configuration
+        // Mobile-optimized scanner configuration with visible frame like UserScanner
         const scannerConfig = {
             fps: isMobile ? 5 : 10, // ลด fps สำหรับ mobile
-            qrbox: isMobile 
-                ? { width: Math.min(300, window.innerWidth - 40), height: Math.min(300, window.innerWidth - 40) }
-                : { width: 250, height: 250 },
+            qrbox: function(viewfinderWidth, viewfinderHeight) {
+                // สร้างกรอบ QR ที่มองเห็นได้ชัดเหมือน UserScanner
+                let minEdgePercentage = 0.7; // 70% ของหน้าจอ
+                let minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
+                let qrboxSize = Math.floor(minEdgeSize * minEdgePercentage);
+                
+                // สำหรับมือถือให้กรอบเล็กลงเล็กน้อย
+                if (isMobile) {
+                    qrboxSize = Math.min(qrboxSize, 280);
+                    qrboxSize = Math.max(qrboxSize, 200); // ขั้นต่ำ 200px
+                } else {
+                    qrboxSize = Math.min(qrboxSize, 350);
+                    qrboxSize = Math.max(qrboxSize, 250); // ขั้นต่ำ 250px
+                }
+                
+                console.log(`📱 QR Box Size: ${qrboxSize}x${qrboxSize}, Mobile: ${isMobile}`);
+                
+                return {
+                    width: qrboxSize,
+                    height: qrboxSize
+                };
+            },
             aspectRatio: 1.0,
             supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
             videoConstraints: {
                 facingMode: 'environment',
                 width: isMobile ? { ideal: 640 } : { ideal: 1280 },
                 height: isMobile ? { ideal: 480 } : { ideal: 720 }
+            },
+            // เพิ่มการตั้งค่าเพื่อแสดงกรอบชัดเจน
+            showTorchButtonIfSupported: true,
+            showZoomSliderIfSupported: true,
+            defaultZoomValueIfSupported: 2,
+            disableFlip: false,
+            // เพิ่ม configuration สำหรับกรอบ
+            experimentalFeatures: {
+                useBarCodeDetectorIfSupported: true
             }
         };
 
