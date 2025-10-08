@@ -68,6 +68,46 @@
   margin: 8px 0;
   border-radius: 8px;
   overflow: hidden;
+  position: relative;
+}
+
+/* QR Scanner Frame Overlay - only show when scanner is active */
+.qr-reader-active::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 250px;
+  height: 250px;
+  border: 3px solid rgba(255, 255, 255, 0.8);
+  border-radius: 12px;
+  box-shadow: 
+    0 0 0 9999px rgba(0, 0, 0, 0.5),
+    0 0 20px rgba(255, 255, 255, 0.3),
+    inset 0 0 20px rgba(255, 255, 255, 0.1);
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* Corner decorations for scanning frame */
+.qr-reader-active::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 250px;
+  height: 250px;
+  background: 
+    linear-gradient(to right, white 3px, transparent 3px) 0 0,
+    linear-gradient(to right, white 3px, transparent 3px) 0 100%,
+    linear-gradient(to bottom, white 3px, transparent 3px) 0 0,
+    linear-gradient(to bottom, white 3px, transparent 3px) 100% 0;
+  background-size: 40px 3px, 40px 3px, 3px 40px, 3px 40px;
+  background-repeat: no-repeat;
+  z-index: 11;
+  pointer-events: none;
 }
 
 .qr-scan-btn {
@@ -537,6 +577,17 @@
     padding: 12px;
     font-size: 16px;
     border-radius: 10px;
+  }
+
+  /* Mobile QR Scanner Frame */
+  .qr-reader-active::before {
+    width: min(250px, calc(100vw - 80px));
+    height: min(250px, calc(100vw - 80px));
+  }
+
+  .qr-reader-active::after {
+    width: min(250px, calc(100vw - 80px));
+    height: min(250px, calc(100vw - 80px));
   }
 
   /* Button Mobile */
