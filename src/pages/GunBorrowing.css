@@ -68,6 +68,31 @@
   margin: 8px 0;
   border-radius: 8px;
   overflow: hidden;
+  position: relative;
+}
+
+/* QR Scanner Corner Frame - Simple 4 corners approach */
+.qr-reader::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(250px, calc(100vw - 80px));
+  height: min(250px, calc(100vw - 80px));
+  background: 
+    linear-gradient(white, white) 0 0 / 50px 5px,
+    linear-gradient(white, white) 0 0 / 5px 50px,
+    linear-gradient(white, white) 100% 0 / 50px 5px,
+    linear-gradient(white, white) 100% 0 / 5px 50px,
+    linear-gradient(white, white) 0 100% / 50px 5px,
+    linear-gradient(white, white) 0 100% / 5px 50px,
+    linear-gradient(white, white) 100% 100% / 50px 5px,
+    linear-gradient(white, white) 100% 100% / 5px 50px;
+  background-repeat: no-repeat;
+  pointer-events: none;
+  z-index: 10;
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8));
 }
 
 .qr-scan-btn {
@@ -537,6 +562,22 @@
     padding: 12px;
     font-size: 16px;
     border-radius: 10px;
+  }
+
+  /* Mobile QR Reader Frame */
+  .qr-reader::before {
+    width: min(200px, calc(100vw - 100px));
+    height: min(200px, calc(100vw - 100px));
+    background: 
+      linear-gradient(white, white) 0 0 / 30px 4px,
+      linear-gradient(white, white) 0 0 / 4px 30px,
+      linear-gradient(white, white) 100% 0 / 30px 4px,
+      linear-gradient(white, white) 100% 0 / 4px 30px,
+      linear-gradient(white, white) 0 100% / 30px 4px,
+      linear-gradient(white, white) 0 100% / 4px 30px,
+      linear-gradient(white, white) 100% 100% / 30px 4px,
+      linear-gradient(white, white) 100% 100% / 4px 30px;
+    background-repeat: no-repeat;
   }
 
   /* Button Mobile */
