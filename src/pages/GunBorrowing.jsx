@@ -20,7 +20,9 @@ export default function GunBorrowing() {
 
     // Database Record State
     const [savedRecords, setSavedRecords] = useState([]);
-    const [currentDate, setCurrentDate] = useState(new Date().toISOString().split('T')[0]);
+    const [currentDate, setCurrentDate] = useState(
+    new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' })
+);
     const [showSaveButton, setShowSaveButton] = useState(false);
 
     // Enhanced error handling state
@@ -1784,4 +1786,5 @@ export default function GunBorrowing() {
             </div>
         </div>
     );
+
 }
